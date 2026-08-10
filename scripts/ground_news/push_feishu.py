@@ -30,17 +30,22 @@ REPORTS_PREFIX = "ground_news/reports/"
 
 
 def get_cos_client():
-    """创建 boto3 S3 客户端（使用 COS virtual-hosted style）"""
+    """创建 boto3 S3 客户端（复用 TrendRadar 的 COS 配置逻辑：SigV2 + virtual-hosted style）"""
     import boto3
     from botocore.config import Config
+    
+    # COS 必须用 SigV2 (signature_version='s3')，配合 virtual-hosted style
+    use_sigv2 = "myqcloud.com" in COS_ENDPOINT.lower() or "aliyuncs.com" in COS_ENDPOINT.lower()
+    signature_version = 's3' if use_sigv2 else 's3v4'
+    
     return boto3.client(
         "s3",
         endpoint_url=COS_ENDPOINT,
         aws_access_key_id=COS_AK,
         aws_secret_access_key=COS_SK,
-        region_name=COS_REGION,
+        region_name=COS_REGION if COS_REGION else None,
         config=Config(
-            signature_version="s3v4",
+            signature_version=signature_version,
             s3={"addressing_style": "virtual"},
         ),
     )
