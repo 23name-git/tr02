@@ -79,4 +79,39 @@ jobs:
             uv run ground-news-push
           fi
 
+          echo "📄 Generate Ground News HTML"
+          uv run python scripts/ground_news/generate_html.py
+
           echo "✅ Pipeline completed successfully"
+
+      # ---------- Cloudflare Pages 部署 ----------
+      - name: Check Cloudflare config
+        if: success()
+        id: cf_check
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_PROJECT_NAME: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+        run: |
+          if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -n "$CLOUDFLARE_PROJECT_NAME" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "✅ CF config detected, preparing Cloudflare Pages deploy"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ No CF secrets, skipping Cloudflare Pages deploy"
+          fi
+
+      - name: Prepare Cloudflare Pages assets
+        if: success() && steps.cf_check.outputs.enabled == 'true'
+        run: |
+          mkdir -p cloudflare_dist
+          cp output/ground_news/index.html cloudflare_dist/index.html
+          echo "📦 Asset prepared: cloudflare_dist/index.html"
+
+      - name: Deploy to Cloudflare Pages
+        if: success() && steps.cf_check.outputs.enabled == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy cloudflare_dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }}
