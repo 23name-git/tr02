@@ -50,17 +50,24 @@ def get_cos_client():
     use_sigv2 = "myqcloud.com" in COS_ENDPOINT.lower() or "aliyuncs.com" in COS_ENDPOINT.lower()
     signature_version = 's3' if use_sigv2 else 's3v4'
     
-    return boto3.client(
-        "s3",
-        endpoint_url=COS_ENDPOINT,
-        aws_access_key_id=COS_AK,
-        aws_secret_access_key=COS_SK,
-        region_name=COS_REGION if COS_REGION else None,
-        config=Config(
+    # 调试：打印配置（不打印密钥）
+    print(f"[DEBUG] COS config: endpoint={COS_ENDPOINT}, region={COS_REGION}, sigv2={use_sigv2}, sig_version={signature_version}")
+    
+    client_kwargs = {
+        "endpoint_url": COS_ENDPOINT,
+        "aws_access_key_id": COS_AK,
+        "aws_secret_access_key": COS_SK,
+        "config": Config(
             signature_version=signature_version,
             s3={"addressing_style": "virtual"},
         ),
-    )
+    }
+    # COS SigV2 不需要 region_name，传了反而可能导致签名不匹配
+    # 只有非 COS (SigV4) 才需要 region_name
+    if not use_sigv2 and COS_REGION:
+        client_kwargs["region_name"] = COS_REGION
+    
+    return boto3.client("s3", **client_kwargs)
 
 
 def upload_to_cos(client, key: str, content: bytes, content_type: str = "application/octet-stream"):
