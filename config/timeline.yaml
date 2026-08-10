@@ -185,8 +185,11 @@ presets:
 
 #改成 start: "00:30", end: "01:00"（次日）	读取 「昨天 00:00-23:59」完整库，零遗漏
         name: "晚间汇总（覆盖昨日全天）"
-        start: "00:30"    # 北京时间次日 00:30
-        end: "01:00"      # 窗口 30 分钟够跑完
+        # start: "00:30"    # 北京时间次日 00:30
+        # end: "01:00"      # 窗口 30 分钟够跑完
+
+        start: "23:30"    # 北京时间次日 00:30
+        end: "00:50"      # 窗口 30 分钟够跑完
         
         # frequency_file: "xxx.txt"               # 关键词文件（可选，位于 config/custom/keyword/）
         # interests_file: "xxx.txt"                # AI 兴趣文件（可选，位于 config/custom/ai/）
