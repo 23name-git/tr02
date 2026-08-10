@@ -19,6 +19,9 @@ from typing import List, Dict, Any, Optional
 from urllib.parse import urlparse
 import hashlib
 
+# 复用 TrendRadar RemoteStorageBackend（已验证可用）
+from scripts.ground_news.cos_helper import upload_bytes, upload_json
+
 # 北京时区
 BEIJING_TZ = timezone(timedelta(hours=8))
 
@@ -41,44 +44,7 @@ def load_sources(config_path: Path) -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def get_cos_client():
-    """创建 boto3 S3 客户端（完全复用 TrendRadar RemoteStorageBackend 的配置逻辑）"""
-    import boto3
-    from botocore.config import Config
-
-    use_sigv2 = "myqcloud.com" in COS_ENDPOINT.lower() or "aliyuncs.com" in COS_ENDPOINT.lower()
-    signature_version = 's3' if use_sigv2 else 's3v4'
-
-    print(f"[DEBUG] COS: endpoint={COS_ENDPOINT}, region={COS_REGION}, sig={signature_version}")
-
-    client_kwargs = {
-        "endpoint_url": COS_ENDPOINT,
-        "aws_access_key_id": COS_AK,
-        "aws_secret_access_key": COS_SK,
-        "config": Config(
-            signature_version=signature_version,
-            s3={"addressing_style": "virtual"},
-        ),
-    }
-    # 与 RemoteStorageBackend 完全一致：region 非空时传入 region_name
-    if COS_REGION:
-        client_kwargs["region_name"] = COS_REGION
-
-    return boto3.client("s3", **client_kwargs)
-
-
-def upload_to_cos(client, key: str, content: bytes, content_type: str = "application/octet-stream"):
-    """上传内容到 COS（显式设置 ContentLength 避免 chunked encoding 导致 SigV2 签名失败）"""
-    client.put_object(
-        Bucket=COS_BUCKET,
-        Key=key,
-        Body=content,
-        ContentLength=len(content),
-        ContentType=content_type,
-    )
-
-
-def fetch_rss_feed(feed_config: Dict[str, Any], client, run_id: str) -> Dict[str, Any]:
+def fetch_rss_feed(feed_config: Dict[str, Any], run_id: str) -> Dict[str, Any]:
     """抓取单个 RSS 源"""
     feed_id = feed_config["id"]
     url = feed_config["url"]
@@ -117,7 +83,7 @@ def fetch_rss_feed(feed_config: Dict[str, Any], client, run_id: str) -> Dict[str
         
         # 上传到 COS
         key = f"{RAW_PREFIX}rss/{feed_id}/{run_id}.json"
-        upload_to_cos(client, key, json.dumps(raw_data, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+        upload_json(key, raw_data)
         print(f"  ✅ 已上传: {key} ({len(entries)} 条)")
         
         return {"source_id": feed_id, "status": "success", "count": len(entries), "key": key}
@@ -127,13 +93,11 @@ def fetch_rss_feed(feed_config: Dict[str, Any], client, run_id: str) -> Dict[str
         return {"source_id": feed_id, "status": "error", "error": str(e)}
 
 
-def fetch_agent_reach_search(query: str, platforms: List[str], client, run_id: str) -> Dict[str, Any]:
+def fetch_agent_reach_search(query: str, platforms: List[str], run_id: str) -> Dict[str, Any]:
     """调用 agent-reach CLI 搜索社交/视频平台（占位：后续接入真实 CLI）"""
     # TODO: 实际调用 agent-reach CLI
-    # 示例: agent-reach search "AI 产品运营" --platforms xiaohongshu,bilibili,twitter --format json
     print(f"[FETCH] agent-reach search: '{query}' on {platforms}")
     
-    # 占位返回空结果
     raw_data = {
         "source_type": "agent_reach",
         "query": query,
@@ -144,7 +108,7 @@ def fetch_agent_reach_search(query: str, platforms: List[str], client, run_id: s
     }
     
     key = f"{RAW_PREFIX}agent_reach/{hashlib.md5(query.encode()).hexdigest()[:8]}/{run_id}.json"
-    upload_to_cos(client, key, json.dumps(raw_data, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+    upload_json(key, raw_data)
     
     return {"query": query, "status": "skipped", "key": key, "note": "agent-reach CLI integration pending"}
 
@@ -154,20 +118,10 @@ def main():
     run_id = datetime.now(BEIJING_TZ).strftime("%Y%m%d_%H%M%S")
     print(f"🚀 Ground News Fetch Sources - Run ID: {run_id}")
     
-    # 校验环境变量
-    required = ["S3_ENDPOINT_URL", "S3_BUCKET_NAME", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"]
-    missing = [k for k in required if not os.getenv(k)]
-    if missing:
-        print(f"❌ 缺少环境变量: {', '.join(missing)}")
-        sys.exit(1)
-    
     # 加载配置
     sources_config = load_sources(CONFIG_PATH)
     rss_feeds = sources_config.get("rss_feeds", [])
     agent_reach_queries = sources_config.get("agent_reach_queries", [])
-    
-    # 创建 COS 客户端
-    client = get_cos_client()
     
     results = {"run_id": run_id, "rss": [], "agent_reach": []}
     
@@ -175,7 +129,7 @@ def main():
     print(f"\n📡 抓取 {len(rss_feeds)} 个 RSS 源...")
     for feed in rss_feeds:
         if feed.get("enabled", True):
-            result = fetch_rss_feed(feed, client, run_id)
+            result = fetch_rss_feed(feed, run_id)
             results["rss"].append(result)
     
     # 2. 抓取 agent-reach 搜索（占位）
@@ -183,12 +137,12 @@ def main():
     for query_config in agent_reach_queries:
         query = query_config["query"]
         platforms = query_config.get("platforms", ["xiaohongshu", "bilibili", "twitter", "reddit"])
-        result = fetch_agent_reach_search(query, platforms, client, run_id)
+        result = fetch_agent_reach_search(query, platforms, run_id)
         results["agent_reach"].append(result)
     
     # 汇总上传
     summary_key = f"{RAW_PREFIX}_runs/{run_id}_summary.json"
-    upload_to_cos(client, summary_key, json.dumps(results, ensure_ascii=False, indent=2).encode("utf-8"), "application/json")
+    upload_json(summary_key, results)
     
     success_rss = sum(1 for r in results["rss"] if r["status"] == "success")
     total_entries = sum(r.get("count", 0) for r in results["rss"])
