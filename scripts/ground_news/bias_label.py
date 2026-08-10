@@ -109,10 +109,13 @@ def download_from_cos(client, key: str) -> Optional[bytes]:
 
 
 def upload_to_cos(client, key: str, data: Dict[str, Any], content_type: str = "application/json"):
+    """上传到 COS（显式设置 ContentLength 避免 chunked encoding 导致 SigV2 签名失败）"""
+    body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
     client.put_object(
         Bucket=COS_BUCKET,
         Key=key,
-        Body=json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"),
+        Body=body,
+        ContentLength=len(body),
         ContentType=content_type,
     )
 

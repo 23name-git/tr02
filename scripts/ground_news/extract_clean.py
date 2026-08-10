@@ -252,6 +252,7 @@ def main(run_id: Optional[str] = None):
             Bucket=COS_BUCKET,
             Key=clean_key,
             Body=jsonl_content.encode("utf-8"),
+            ContentLength=len(jsonl_content.encode("utf-8")),
             ContentType="application/jsonl",
         )
         print(f"\n✅ 完成: 共 {len(all_cleaned)} 条清洗数据 -> {clean_key}")

@@ -71,11 +71,12 @@ def get_cos_client():
 
 
 def upload_to_cos(client, key: str, content: bytes, content_type: str = "application/octet-stream"):
-    """上传内容到 COS"""
+    """上传内容到 COS（显式设置 ContentLength 避免 chunked encoding 导致 SigV2 签名失败）"""
     client.put_object(
         Bucket=COS_BUCKET,
         Key=key,
         Body=content,
+        ContentLength=len(content),
         ContentType=content_type,
     )
 

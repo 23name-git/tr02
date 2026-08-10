@@ -71,6 +71,7 @@ def download_from_cos(client, key: str) -> Optional[bytes]:
 
 
 def upload_to_cos(client, key: str, data: Any, content_type: str = "application/json"):
+    """上传到 COS（显式设置 ContentLength 避免 chunked encoding 导致 SigV2 签名失败）"""
     if isinstance(data, str):
         body = data.encode("utf-8")
     else:
@@ -79,6 +80,7 @@ def upload_to_cos(client, key: str, data: Any, content_type: str = "application/
         Bucket=COS_BUCKET,
         Key=key,
         Body=body,
+        ContentLength=len(body),
         ContentType=content_type,
     )
 
