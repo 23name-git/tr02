@@ -52,17 +52,15 @@ UMAP_METRIC = "cosine"
 
 
 def get_cos_client():
-    """创建 boto3 S3 客户端（复用 TrendRadar 的 COS 配置逻辑：SigV2 + virtual-hosted style）"""
+    """创建 boto3 S3 客户端（完全复用 TrendRadar RemoteStorageBackend 的配置逻辑）"""
     import boto3
     from botocore.config import Config
-    
-    # COS 必须用 SigV2 (signature_version='s3')，配合 virtual-hosted style
+
     use_sigv2 = "myqcloud.com" in COS_ENDPOINT.lower() or "aliyuncs.com" in COS_ENDPOINT.lower()
     signature_version = 's3' if use_sigv2 else 's3v4'
-    
-    # 调试：打印配置（不打印密钥）
-    print(f"[DEBUG] COS config: endpoint={COS_ENDPOINT}, region={COS_REGION}, sigv2={use_sigv2}, sig_version={signature_version}")
-    
+
+    print(f"[DEBUG] COS: endpoint={COS_ENDPOINT}, region={COS_REGION}, sig={signature_version}")
+
     client_kwargs = {
         "endpoint_url": COS_ENDPOINT,
         "aws_access_key_id": COS_AK,
@@ -72,11 +70,10 @@ def get_cos_client():
             s3={"addressing_style": "virtual"},
         ),
     }
-    # COS SigV2 不需要 region_name，传了反而可能导致签名不匹配
-    # 只有非 COS (SigV4) 才需要 region_name
-    if not use_sigv2 and COS_REGION:
+    # 与 RemoteStorageBackend 完全一致：region 非空时传入 region_name
+    if COS_REGION:
         client_kwargs["region_name"] = COS_REGION
-    
+
     return boto3.client("s3", **client_kwargs)
 
 
