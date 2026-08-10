@@ -71,6 +71,7 @@ BIAS_SCORE = {
 
 
 def get_cos_client():
+    """创建 boto3 S3 客户端（使用 COS virtual-hosted style）"""
     import boto3
     from botocore.config import Config
     return boto3.client(
@@ -79,7 +80,10 @@ def get_cos_client():
         aws_access_key_id=COS_AK,
         aws_secret_access_key=COS_SK,
         region_name=COS_REGION,
-        config=Config(signature_version="s3v4"),
+        config=Config(
+            signature_version="s3v4",
+            s3={"addressing_style": "virtual"},
+        ),
     )
 
 
