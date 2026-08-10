@@ -1,165 +1,160 @@
-# Ground News Like Pipeline - 新闻源配置
-# 20 个中英文主流媒体 RSS 源，覆盖政治、科技、财经、国际、行业
-
+# Ground News 中文源 + 国际源（修复死源）
 rss_feeds:
-  # === 英文主流媒体 (10) ===
-  - id: "reuters_world"
-    name: "Reuters World News"
-    url: "https://www.reuters.com/world/rss"
-    enabled: true
-    category: "international"
-    bias_reference: "reuters.com"  # 参考偏见评分表中的域名
+  # ===== 正常工作的源 =====
+  - id: bbc_world
+    name: BBC World
+    url: https://feeds.bbci.co.uk/news/world/rss.xml
+    category: world
+    bias_reference: bbc.com
+    language: en
 
-  - id: "ap_news"
-    name: "Associated Press"
-    url: "https://apnews.com/rss"
-    enabled: true
-    category: "general"
-    bias_reference: "apnews.com"
+  - id: nytimes_world
+    name: NYTimes World
+    url: https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+    category: world
+    bias_reference: nytimes.com
+    language: en
 
-  - id: "bbc_world"
-    name: "BBC World"
-    url: "https://feeds.bbci.co.uk/news/world/rss.xml"
-    enabled: true
-    category: "international"
-    bias_reference: "bbc.com"
+  - id: wapo_world
+    name: Washington Post
+    url: https://feeds.washingtonpost.com/rss/world
+    category: world
+    bias_reference: washingtonpost.com
+    language: en
 
-  - id: "nytimes_world"
-    name: "NYTimes World"
-    url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
-    enabled: true
-    category: "international"
-    bias_reference: "nytimes.com"
+  - id: guardian_world
+    name: The Guardian
+    url: https://www.theguardian.com/world/rss
+    category: world
+    bias_reference: theguardian.com
+    language: en
 
-  - id: "washington_post"
-    name: "Washington Post"
-    url: "https://feeds.washingtonpost.com/rss/world"
-    enabled: true
-    category: "politics"
-    bias_reference: "washingtonpost.com"
+  - id: economist_intl
+    name: The Economist
+    url: https://www.economist.com/international/rss.xml
+    category: world
+    bias_reference: economist.com
+    language: en
 
-  - id: "guardian_world"
-    name: "The Guardian World"
-    url: "https://www.theguardian.com/world/rss"
-    enabled: true
-    category: "international"
-    bias_reference: "theguardian.com"
+  - id: ft_world
+    name: Financial Times
+    url: https://www.ft.com/rss/world
+    category: world
+    bias_reference: ft.com
+    language: en
 
-  - id: "economist"
-    name: "The Economist"
-    url: "https://www.economist.com/international/rss.xml"
-    enabled: true
-    category: "analysis"
-    bias_reference: "economist.com"
+  - id: cnn_world
+    name: CNN World
+    url: http://rss.cnn.com/rss/edition_world.rss
+    category: world
+    bias_reference: cnn.com
+    language: en
 
-  - id: "ft_world"
-    name: "Financial Times World"
-    url: "https://www.ft.com/rss/world"
-    enabled: true
-    category: "finance"
-    bias_reference: "ft.com"
+  # ===== 中文源（修复：换为可用的 RSS 地址） =====
+  - id: people_cn
+    name: 人民网
+    url: http://www.people.com.cn/rss/politics.xml
+    category: china
+    bias_reference: people.com.cn
+    language: zh
 
-  - id: "wsj_world"
-    name: "Wall Street Journal World"
-    url: "https://feeds.wsj.com/xml/rss/3_7085.xml"
-    enabled: true
-    category: "finance"
-    bias_reference: "wsj.com"
+  # 36氪 - 用 news feed
+  - id: 36kr_news
+    name: 36氪
+    url: https://36kr.com/feed
+    category: tech
+    bias_reference: 36kr.com
+    language: zh
 
-  - id: "cnn_world"
-    name: "CNN World"
-    url: "http://rss.cnn.com/rss/edition_world.rss"
-    enabled: true
-    category: "international"
-    bias_reference: "cnn.com"
+  # ===== 科技源 =====
+  - id: techcrunch
+    name: TechCrunch
+    url: https://techcrunch.com/feed/
+    category: tech
+    bias_reference: techcrunch.com
+    language: en
 
-  # === 中文主流媒体 (8) ===
-  - id: "xinhua"
-    name: "新华社"
-    url: "https://www.xinhuanet.com/politics/gnjxs.xml"
-    enabled: true
-    category: "china_politics"
-    bias_reference: "xinhuanet.com"
+  - id: mit_tech_review
+    name: MIT Technology Review
+    url: https://www.technologyreview.com/feed/
+    category: tech
+    bias_reference: technologyreview.com
+    language: en
 
-  - id: "people_daily"
-    name: "人民网"
-    url: "http://www.people.com.cn/rss/politics.xml"
-    enabled: true
-    category: "china_politics"
-    bias_reference: "people.com.cn"
+  # ===== 新增可用源 =====
+  - id: hackernews
+    name: Hacker News
+    url: https://hnrss.org/frontpage
+    category: tech
+    bias_reference: ycombinator.com
+    language: en
 
-  - id: "caixin"
-    name: "财新网"
-    url: "https://www.caixin.com/rss.xml"
-    enabled: true
-    category: "finance"
-    bias_reference: "caixin.com"
+  - id: verge
+    name: The Verge
+    url: https://www.theverge.com/rss/index.xml
+    category: tech
+    bias_reference: theverge.com
+    language: en
 
-  - id: "thepaper"
-    name: "澎湃新闻"
-    url: "https://www.thepaper.cn/rss_25950.xml"
-    enabled: true
-    category: "general"
-    bias_reference: "thepaper.cn"
+  - id: ars_technica
+    name: Ars Technica
+    url: https://feeds.arstechnica.com/arstechnica/index
+    category: tech
+    bias_reference: arstechnica.com
+    language: en
 
-  - id: "jiemian"
-    name: "界面新闻"
-    url: "https://www.jiemian.com/rss.xml"
-    enabled: true
-    category: "general"
-    bias_reference: "jiemian.com"
+  - id: wired
+    name: Wired
+    url: https://www.wired.com/feed/rss
+    category: tech
+    bias_reference: wired.com
+    language: en
 
-  - id: "36kr"
-    name: "36氪"
-    url: "https://36kr.com/feed"
-    enabled: true
-    category: "tech"
-    bias_reference: "36kr.com"
+  - id: scmp_news
+    name: 南华早报 SCMP
+    url: https://www.scmp.com/rss/91/feed
+    category: asia
+    bias_reference: scmp.com
+    language: en
 
-  - id: "huxiu"
-    name: "虎嗅网"
-    url: "https://www.huxiu.com/rss.xml"
-    enabled: true
-    category: "tech"
-    bias_reference: "huxiu.com"
+  - id: aljazeera
+    name: Al Jazeera
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    category: world
+    bias_reference: aljazeera.com
+    language: en
 
-  - id: "ifeng"
-    name: "凤凰网"
-    url: "https://news.ifeng.com/rss/index.xml"
-    enabled: true
-    category: "general"
-    bias_reference: "ifeng.com"
+  - id: reuters_world
+    name: Reuters World
+    url: https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best
+    category: world
+    bias_reference: reuters.com
+    language: en
 
-  # === 垂直/行业媒体 (2) ===
-  - id: "techcrunch"
-    name: "TechCrunch"
-    url: "https://techcrunch.com/feed/"
-    enabled: true
-    category: "tech"
-    bias_reference: "techcrunch.com"
+  - id: ap_news
+    name: Associated Press
+    url: https://www.mysanantonio.com/rss/feed/AP-Top-News-550.php
+    category: world
+    bias_reference: apnews.com
+    language: en
 
-  - id: "mit_tech_review"
-    name: "MIT Technology Review"
-    url: "https://www.technologyreview.com/feed/"
-    enabled: true
-    category: "tech"
-    bias_reference: "technologyreview.com"
-
-
-# Agent-Reach 搜索查询配置（占位，待 agent-reach CLI 集成后启用）
-agent_reach_queries:
-  - query: "AI 产品运营 招聘"
-    platforms: ["xiaohongshu", "bilibili", "twitter", "linkedin"]
-    enabled: false
-
-  - query: "手作饰品 选品 趋势"
-    platforms: ["xiaohongshu", "bilibili", "weibo"]
-    enabled: false
-
-  - query: "韩系 服饰 选品 日本 供应链"
-    platforms: ["xiaohongshu", "bilibili", "twitter"]
-    enabled: false
-
-  - query: "AIGC 内容运营 工具"
-    platforms: ["twitter", "reddit", "bilibili"]
-    enabled: false
+# agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
+agent_reach:
+  enabled: true
+  platforms:
+    # 综合搜索（Exa AI）
+    - name: exa_search
+      type: web
+      queries:
+        - "今日热点新闻"
+        - "AI artificial intelligence latest news"
+        - "中美关系 latest"
+    # B站热搜（无需登录）
+    - name: bilibili
+      type: social
+      command: "bili search '{query}' --type video -n 5"
+      queries:
+        - "今日热点"
+        - "AI 人工智能"
+  max_per_query: 10
+  timeout_seconds: 60

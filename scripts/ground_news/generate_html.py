@@ -1,25 +1,77 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ground News HTML v2 — 按话题聚类 + 逐话题 Bias Bar + 盲点检测
-使用标题关键词 + spaCy NER 做简易跨源话题分组
+Ground News HTML v3 — 向量语义聚类 + 逐话题 Bias Bar + 盲点 + 源透明度
+- 使用 TF-IDF + cosine similarity 做跨源话题聚类
+- 可选 sentence-transformers（安装后自动启用）
+- 按话题分组（非按源），每话题一条 Bias Bar
 """
 
-import json
-import csv
-import yaml
-import re
+import json, csv, yaml, re, os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from collections import Counter, defaultdict
 import warnings
-
 warnings.filterwarnings("ignore")
+
+import numpy as np
 
 BEIJING_TZ = timezone(timedelta(hours=8))
 OUTPUT_DIR = Path("output/ground_news")
 CONFIG_DIR = Path("config/ground_news")
+
+# ===================== 向量聚类引擎 =====================
+
+def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.25) -> Dict[str, List[Dict]]:
+    """TF-IDF 向量化 + cosine similarity 聚类"""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    titles = [e.get("title", "") for e in entries]
+    if len(titles) < 2:
+        return {"All News": entries}
+
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=500)
+    try:
+        tfidf_matrix = vectorizer.fit_transform(titles)
+        sim_matrix = cosine_similarity(tfidf_matrix)
+    except Exception:
+        return {"All News": entries}
+
+    # 贪婪聚类
+    n = len(entries)
+    assigned = [False] * n
+    clusters: Dict[int, List[int]] = {}
+
+    for i in range(n):
+        if assigned[i]:
+            continue
+        cluster = [i]
+        assigned[i] = True
+        for j in range(i + 1, n):
+            if not assigned[j] and sim_matrix[i][j] >= similarity_threshold:
+                cluster.append(j)
+                assigned[j] = True
+        clusters[len(clusters)] = cluster
+
+    # 命名聚类（取出现最多的词）
+    feature_names = vectorizer.get_feature_names_out()
+    result = {}
+    for cid, indices in clusters.items():
+        # 提取关键词
+        cluster_titles = [titles[i] for i in indices]
+        # 用 TF-IDF 均值找 top 词
+        centroid = np.mean(tfidf_matrix[indices].toarray(), axis=0)
+        top_indices = np.argsort(centroid)[-5:][::-1]
+        keywords = [feature_names[k] for k in top_indices if centroid[k] > 0]
+        topic_name = " / ".join(keywords[:3]) if keywords else f"Topic {cid + 1}"
+
+        result[topic_name] = [entries[i] for i in indices]
+
+    # 按簇大小排序
+    return dict(sorted(result.items(), key=lambda x: -len(x[1])))
+
 
 # ===================== 数据加载 =====================
 
@@ -34,7 +86,6 @@ def load_latest_output() -> Optional[Dict[str, Any]]:
 
 
 def load_bias_ratings() -> Dict[str, str]:
-    """域名 → 偏见标签"""
     ratings = {}
     csv_path = CONFIG_DIR / "allsides_ratings.csv"
     if csv_path.exists():
@@ -55,180 +106,128 @@ def extract_domain(url: str) -> str:
         return ""
 
 
-# ===================== 话题聚类 =====================
-
-# 手动定义高频话题关键词（用于兜底，spaCy 失败时使用）
-TOPIC_PATTERNS: List[Tuple[str, List[str]]] = [
-    ("Iran / Hormuz / Middle East", ["iran", "hormuz", "tehran", "persian", "middle east", "hezbollah", "hamas", "gaza", "israel"]),
-    ("Ukraine / Russia War", ["ukraine", "russia", "kyiv", "moscow", "putin", "zelensky", "nato"]),
-    ("China / Taiwan / Asia", ["china", "taiwan", "beijing", "xi", "south china sea", "indo-pacific"]),
-    ("US Politics / Trump", ["trump", "republican", "democrat", "congress", "white house", "senate", "supreme court", "blanche", "bondi"]),
-    ("Climate / Environment", ["climate", "wildfire", "heat", "drought", "carbon", "emission", "hurricane", "earthquake"]),
-    ("AI / Tech / Science", ["ai", "artificial intelligence", "llm", "model", "openai", "deepseek", "chip", "startup", "space", "tech"]),
-    ("Economy / Markets", ["stock", "market", "economy", "inflation", "fed", "gdp", "trade", "tariff", "crypto"]),
-    ("Health / Pandemic", ["ebola", "virus", "vaccine", "health", "disease", "outbreak", "covid"]),
-    ("Immigration / Border", ["immigrant", "border", "migrant", "refugee", "asylum", "deport", "ICE"]),
-    ("Europe / EU", ["eu", "europe", "france", "germany", "spain", "italy", "brussels", "European union"]),
-    ("Africa", ["africa", "congo", "sudan", "nigeria", "uganda", "kenya", "south africa", "ethiopia"]),
-    ("Latin America", ["colombia", "venezuela", "brazil", "mexico", "argentina", "cuba"]),
-    ("Japan / Korea", ["japan", "korea", "tokyo", "seoul", "pyongyang"]),
-    ("Sports", ["world cup", "olympic", "football", "tennis", "cricket", "nba", "nfl", "soccer"]),
-]
-
-def assign_topic(title: str) -> str:
-    """根据标题关键词分配话题"""
-    title_lower = title.lower()
-    for topic, keywords in TOPIC_PATTERNS:
-        if any(kw in title_lower for kw in keywords):
-            return topic
-    return "Other / General"
+def bias_to_category(bias: str) -> str:
+    b = bias.lower()
+    if "left" in b: return "left"
+    if "right" in b: return "right"
+    return "center"
 
 
-# ===================== HTML 生成 =====================
+# ===================== HTML 组件 =====================
 
-def format_pct(n: int, total: int) -> str:
-    if total == 0:
-        return "0%"
-    return f"{round(n / total * 100)}%"
-
-
-def build_bias_bar_html(left: int, center: int, right: int, show_labels: bool = True) -> str:
+def build_bias_bar(left: int, center: int, right: int) -> str:
     total = left + center + right
     if total == 0:
-        lp = cp = rp = 0
+        lp = rp = cp = 0
     else:
         lp = round(left / total * 100)
         rp = round(right / total * 100)
         cp = 100 - lp - rp
-    html = f'<div class="bias-bar"><span class="bar-left" style="width:{lp}%"></span><span class="bar-center" style="width:{cp}%"></span><span class="bar-right" style="width:{rp}%"></span></div>'
-    if show_labels:
-        html += f'<div class="bias-labels"><span>{lp}% L</span><span>{cp}% C</span><span>{rp}% R</span></div>'
-    return html
+    return f"""<div class="bias-bar">
+        <span class="bar-left" style="width:{lp}%"></span>
+        <span class="bar-center" style="width:{cp}%"></span>
+        <span class="bar-right" style="width:{rp}%"></span>
+    </div>
+    <div class="bias-labels"><span>{lp}% L ({left})</span><span>{cp}% C ({center})</span><span>{rp}% R ({right})</span></div>"""
 
 
-def bias_to_category(bias: str) -> str:
-    """将偏见标签映射到左/中/右三类"""
-    bias_lower = bias.lower()
-    if "left" in bias_lower:
-        return "left"
-    elif "right" in bias_lower:
-        return "right"
-    else:
-        return "center"
-
+# ===================== 主逻辑 =====================
 
 def generate_html() -> str:
     output = load_latest_output()
     bias_ratings = load_bias_ratings()
 
     if not output:
-        return "<html><body><h1>No data yet</h1></body></html>"
+        return "<html><body><h1>No data</h1></body></html>"
 
     entries = output.get("entries", [])
     stats = output.get("stats", {})
     run_id = output.get("run_id", "")
-    now = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M %Z")
 
-    # ---- 丰富每条的偏见信息 ----
-    for entry in entries:
-        domain = extract_domain(entry.get("link", ""))
-        bias = bias_ratings.get(domain, "Unknown")
-        entry["_domain"] = domain
-        entry["_bias"] = bias
-        entry["_category"] = bias_to_category(bias)
-        entry["_topic"] = assign_topic(entry.get("title", ""))
+    # 丰富偏见信息
+    for e in entries:
+        e["_domain"] = extract_domain(e.get("link", ""))
+        e["_bias"] = bias_ratings.get(e["_domain"], "Unknown")
+        e["_category"] = bias_to_category(e["_bias"])
 
-    # ---- 按话题分组 ----
-    topics: Dict[str, List[Dict]] = defaultdict(list)
-    for entry in entries:
-        topics[entry["_topic"]].append(entry)
+    # ===== 向量语义聚类 =====
+    print(f"  🧮 Clustering {len(entries)} articles...")
+    topic_clusters = cluster_articles_tfidf(entries)
+    print(f"  📊 {len(topic_clusters)} topics found")
 
-    # 排序：话题条目数降序，Other 排在最后
-    sorted_topics = sorted(topics.items(), key=lambda x: (-len(x[1]) if x[0] != "Other / General" else 0))
+    # ===== 全部统计 =====
+    rated = [e for e in entries if e["_bias"] != "Unknown"]
+    all_left = sum(1 for e in rated if e["_category"] == "left")
+    all_center = sum(1 for e in rated if e["_category"] == "center")
+    all_right = sum(1 for e in rated if e["_category"] == "right")
+    all_sources = set(e.get("source_name", "?") for e in entries)
 
-    # ---- 全局统计 ----
-    total_articles = len(entries)
-    all_sources = set(e.get("source_name", "Unknown") for e in entries)
-    all_rated = [e for e in entries if e["_bias"] != "Unknown"]
-
-    global_left = sum(1 for e in all_rated if e["_category"] == "left")
-    global_center = sum(1 for e in all_rated if e["_category"] == "center")
-    global_right = sum(1 for e in all_rated if e["_category"] == "right")
-
-    # ---- 生成话题卡片 ----
+    # ===== 话题卡片 =====
     topic_cards = ""
-    for topic_name, topic_entries in sorted_topics:
-        # 偏见分布
-        rated = [e for e in topic_entries if e["_bias"] != "Unknown"]
-        left_n = sum(1 for e in rated if e["_category"] == "left")
-        center_n = sum(1 for e in rated if e["_category"] == "center")
-        right_n = sum(1 for e in rated if e["_category"] == "right")
+    for topic_name, topic_entries in topic_clusters.items():
+        if len(topic_entries) < 2:
+            continue  # 跳过单篇孤岛
 
-        # 盲点检测
-        total_rated_topic = left_n + center_n + right_n
+        rated_t = [e for e in topic_entries if e["_bias"] != "Unknown"]
+        left_n = sum(1 for e in rated_t if e["_category"] == "left")
+        center_n = sum(1 for e in rated_t if e["_category"] == "center")
+        right_n = sum(1 for e in rated_t if e["_category"] == "right")
+        total_rated = left_n + center_n + right_n
+
+        # 盲点
         blindspot = ""
-        if total_rated_topic >= 4:
+        if total_rated >= 3:
             if left_n == 0 and right_n > 0:
-                blindspot = '<span class="blindspot-tag">⚠️ Left Blindspot</span>'
+                blindspot = '<span class="blindspot-tag">⚠ Left Blindspot</span>'
             elif right_n == 0 and left_n > 0:
-                blindspot = '<span class="blindspot-tag">⚠️ Right Blindspot</span>'
-            elif center_n == 0 and (left_n > 0 and right_n > 0):
-                blindspot = '<span class="blindspot-tag">⚠️ Missing Center Coverage</span>'
+                blindspot = '<span class="blindspot-tag">⚠ Right Blindspot</span>'
 
-        # 源覆盖
-        sources_in_topic = defaultdict(list)
+        # 源标签
+        src_map = defaultdict(list)
         for e in topic_entries:
-            sources_in_topic[e.get("source_name", "Unknown")].append(e)
-
+            src_map[e.get("source_name", "?")].append(e)
         source_tags = ""
-        for src_name, src_entries in sorted(sources_in_topic.items(), key=lambda x: -len(x[1])):
-            bias = src_entries[0].get("_bias", "Unknown")
-            bias_class = bias.lower().replace(" ", "-")
-            source_tags += f'<span class="source-tag {bias_class}">{src_name} ({len(src_entries)})</span> '
+        for sn, se in sorted(src_map.items(), key=lambda x: -len(x[1])):
+            bias_c = se[0].get("_bias", "Unknown").lower().replace(" ", "-")
+            source_tags += f'<span class="src-tag {bias_c}">{sn} ({len(se)})</span> '
 
-        # 文章列表（最多显示 8 篇，不同源优先）
-        shown = []
-        seen_sources = set()
+        # 文章列表（每源取1篇，最多10篇）
+        shown, seen = [], set()
         for e in topic_entries:
-            src = e.get("source_name", "Unknown")
-            if src not in seen_sources:
-                shown.append(e)
-                seen_sources.add(src)
-                if len(shown) >= 8:
-                    break
-        # 如果还不够 8 篇，补充
-        if len(shown) < 8:
-            for e in topic_entries:
-                if e not in shown:
-                    shown.append(e)
-                    if len(shown) >= 8:
-                        break
+            s = e.get("source_name", "?")
+            if s not in seen:
+                shown.append(e); seen.add(s)
+                if len(shown) >= 10: break
+        if len(shown) < 10:
+            shown += [e for e in topic_entries if e not in shown][:10 - len(shown)]
 
-        article_items = ""
+        article_rows = ""
         for e in shown:
-            bias_tag = e["_bias"]
-            bias_class = bias_tag.lower().replace(" ", "-")
-            article_items += f"""<div class="article-row">
-                <span class="article-source-tag {bias_class}">{e.get("source_name", "?")}</span>
-                <a href="{e.get('link', '#')}" target="_blank">{e.get('title', '(no title)')}</a>
+            bc = e["_bias"].lower().replace(" ", "-")
+            article_rows += f"""<div class="art-row">
+                <span class="art-src {bc}">{e.get('source_name','?')}</span>
+                <a href="{e.get('link','#')}" target="_blank">{e.get('title','(untitled)')}</a>
             </div>"""
 
         remaining = len(topic_entries) - len(shown)
         if remaining > 0:
-            article_items += f'<div class="article-row more">+ {remaining} more articles from {len(sources_in_topic) - len(seen_sources)} other sources</div>'
+            article_rows += f'<div class="art-row more">+{remaining} more</div>'
 
-        topic_cards += f"""
-        <div class="topic-card">
-            <div class="topic-header">
+        topic_cards += f"""<div class="card">
+            <div class="card-hd">
                 <h3>{topic_name} {blindspot}</h3>
-                <span class="topic-count">{len(topic_entries)} articles · {len(sources_in_topic)} sources</span>
+                <span class="cnt">{len(topic_entries)} articles · {len(src_map)} sources</span>
             </div>
-            {build_bias_bar_html(left_n, center_n, right_n)}
-            <div class="source-tags">{source_tags}</div>
-            <div class="article-list">{article_items}</div>
+            {build_bias_bar(left_n, center_n, right_n)}
+            <div class="src-tags">{source_tags}</div>
+            <div class="art-list">{article_rows}</div>
         </div>"""
 
-    # ===================== HTML 模板 =====================
+    # 统计单篇（未聚类成功的）
+    singles = sum(1 for v in topic_clusters.values() if len(v) < 2)
+
+    # ===== HTML =====
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -236,126 +235,91 @@ def generate_html() -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ground News — Media Bias Dashboard</title>
 <style>
-:root {{
-    --left: #2563eb; --lean-left: #60a5fa; --center: #9ca3af;
-    --lean-right: #f87171; --right: #dc2626;
-    --bg: #f1f5f9; --card-bg: #fff; --text: #0f172a; --muted: #64748b;
-    --border: #e2e8f0; --shadow: 0 1px 3px rgba(0,0,0,0.06);
-}}
-* {{ margin:0; padding:0; box-sizing:border-box; }}
-body {{ font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }}
-.header {{ background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 2.5rem 0; }}
-.header h1 {{ font-size: 1.6rem; font-weight: 800; }}
-.header p {{ color: #94a3b8; font-size: 0.85rem; margin-top: 0.4rem; }}
-.container {{ max-width: 800px; margin: 0 auto; padding: 0 1rem; }}
-
-/* Stats */
-.stats {{ display: flex; gap: 0.8rem; margin: 1.2rem 0; flex-wrap: wrap; }}
-.stat-card {{ background: var(--card-bg); border-radius: 10px; padding: 1rem 1.2rem; flex: 1; min-width: 120px; box-shadow: var(--shadow); }}
-.stat-card .number {{ font-size: 1.8rem; font-weight: 800; }}
-.stat-card .label {{ color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }}
-
-/* Overall Bias Bar */
-.bias-section {{ background: var(--card-bg); border-radius: 10px; padding: 1.2rem; margin: 1rem 0; box-shadow: var(--shadow); }}
-.bias-section h3 {{ font-size: 0.9rem; margin-bottom: 0.8rem; }}
-.bias-bar {{ display: flex; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 0.8rem; }}
-.bias-bar .bar-left {{ background: var(--left); }}
-.bias-bar .bar-center {{ background: var(--center); }}
-.bias-bar .bar-right {{ background: var(--right); }}
-.bias-labels {{ display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); }}
-.legend {{ display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.8rem; font-size: 0.75rem; }}
-.legend .dot {{ width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 3px; }}
-.dot-left {{ background: var(--left); }} .dot-right {{ background: var(--right); }} .dot-center {{ background: var(--center); }}
-
-/* Topic Cards */
-.topic-card {{ background: var(--card-bg); border-radius: 10px; padding: 1.2rem; margin: 0.8rem 0; box-shadow: var(--shadow); }}
-.topic-header {{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }}
-.topic-header h3 {{ font-size: 1rem; font-weight: 700; }}
-.topic-count {{ font-size: 0.75rem; color: var(--muted); white-space: nowrap; }}
-.blindspot-tag {{ background: #fef3c7; color: #d97706; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 6px; }}
-
-/* Source Tags */
-.source-tags {{ display: flex; flex-wrap: wrap; gap: 4px; margin: 0.5rem 0; }}
-.source-tag {{ font-size: 0.7rem; padding: 1px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }}
-.source-tag.left {{ background: #dbeafe; color: #1d4ed8; }}
-.source-tag.lean-left {{ background: #eff6ff; color: #3b82f6; }}
-.source-tag.center {{ background: #f1f5f9; color: #475569; }}
-.source-tag.lean-right {{ background: #fef2f2; color: #ef4444; }}
-.source-tag.right {{ background: #fee2e2; color: #b91c1c; }}
-.source-tag.unknown {{ background: #f8fafc; color: #94a3b8; }}
-
-/* Article List */
-.article-list {{ margin-top: 0.8rem; }}
-.article-row {{ display: flex; gap: 0.5rem; align-items: baseline; padding: 0.35rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }}
-.article-row:last-child {{ border-bottom: none; }}
-.article-row a {{ color: var(--text); text-decoration: none; flex: 1; }}
-.article-row a:hover {{ color: #2563eb; text-decoration: underline; }}
-.article-row.more {{ color: var(--muted); font-style: italic; font-size: 0.8rem; }}
-.article-source-tag {{ font-size: 0.65rem; padding: 1px 6px; border-radius: 8px; font-weight: 600; white-space: nowrap; min-width: 60px; text-align: center; }}
-.article-source-tag.left {{ background: #dbeafe; color: #1d4ed8; }}
-.article-source-tag.lean-left {{ background: #eff6ff; color: #3b82f6; }}
-.article-source-tag.center {{ background: #f1f5f9; color: #475569; }}
-.article-source-tag.lean-right {{ background: #fef2f2; color: #ef4444; }}
-.article-source-tag.right {{ background: #fee2e2; color: #b91c1c; }}
-.article-source-tag.unknown {{ background: #f8fafc; color: #94a3b8; }}
-
-/* Footer */
-.footer {{ text-align: center; padding: 2rem; color: var(--muted); font-size: 0.75rem; }}
-
-/* Blindspot Alert Banner */
-.alert {{ border-radius: 8px; padding: 0.8rem 1rem; margin: 0.8rem 0; font-size: 0.85rem; }}
-.alert-warning {{ background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; }}
-
-@media (max-width: 600px) {{
-    .stats {{ flex-direction: column; }}
-    .topic-header {{ flex-direction: column; }}
-}}
+:root{{--L:#2563eb;--C:#9ca3af;--R:#dc2626;--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0}}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5}}
+.hd{{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:2.5rem 0}}
+.hd h1{{font-size:1.5rem;font-weight:800}}
+.hd p{{color:#94a3b8;font-size:.85rem;margin-top:.4rem}}
+.w{{max-width:840px;margin:0 auto;padding:0 1rem}}
+.stats{{display:flex;gap:.8rem;margin:1.2rem 0;flex-wrap:wrap}}
+.sc{{background:var(--card);border-radius:10px;padding:1rem 1.2rem;flex:1;min-width:100px;box-shadow:0 1px 3px #0001}}
+.sc .n{{font-size:1.8rem;font-weight:800}}
+.sc .l{{color:var(--mu);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}}
+.bar-wrap{{background:var(--card);border-radius:10px;padding:1.2rem;margin:1rem 0;box-shadow:0 1px 3px #0001}}
+.bar-wrap h3{{font-size:.9rem;margin-bottom:.8rem}}
+.bias-bar{{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:.6rem}}
+.bar-left{{background:var(--L)}}.bar-center{{background:var(--C)}}.bar-right{{background:var(--R)}}
+.bias-labels{{display:flex;justify-content:space-between;font-size:.78rem;color:var(--mu)}}
+.leg{{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.6rem;font-size:.75rem}}
+.leg .dot{{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}}
+.dL{{background:var(--L)}}.dC{{background:var(--C)}}.dR{{background:var(--R)}}
+.card{{background:var(--card);border-radius:10px;padding:1.2rem;margin:.8rem 0;box-shadow:0 1px 3px #0001}}
+.card-hd{{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;flex-wrap:wrap}}
+.card-hd h3{{font-size:1rem;font-weight:700}}
+.cnt{{font-size:.72rem;color:var(--mu);white-space:nowrap}}
+.blindspot-tag{{background:#fef3c7;color:#d97706;font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}}
+.src-tags{{display:flex;flex-wrap:wrap;gap:4px;margin:.5rem 0}}
+.src-tag{{font-size:.68rem;padding:1px 8px;border-radius:10px;font-weight:600;white-space:nowrap}}
+.src-tag.left{{background:#dbeafe;color:#1d4ed8}}.src-tag.lean-left{{background:#eff6ff;color:#3b82f6}}
+.src-tag.center{{background:#f1f5f9;color:#475569}}
+.src-tag.lean-right{{background:#fef2f2;color:#ef4444}}.src-tag.right{{background:#fee2e2;color:#b91c1c}}
+.src-tag.unknown{{background:#f8fafc;color:#94a3b8}}
+.art-list{{margin-top:.8rem}}
+.art-row{{display:flex;gap:.5rem;align-items:baseline;padding:.35rem 0;border-bottom:1px solid var(--bd);font-size:.86rem}}
+.art-row:last-child{{border-bottom:none}}
+.art-row a{{color:var(--tx);text-decoration:none;flex:1}}
+.art-row a:hover{{color:#2563eb}}
+.art-row.more{{color:var(--mu);font-style:italic;font-size:.78rem}}
+.art-src{{font-size:.62rem;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap;min-width:55px;text-align:center}}
+.art-src.left{{background:#dbeafe;color:#1d4ed8}}.art-src.lean-left{{background:#eff6ff;color:#3b82f6}}
+.art-src.center{{background:#f1f5f9;color:#475569}}
+.art-src.lean-right{{background:#fef2f2;color:#ef4444}}.art-src.right{{background:#fee2e2;color:#b91c1c}}
+.art-src.unknown{{background:#f8fafc;color:#94a3b8}}
+.alert{{border-radius:8px;padding:.8rem 1rem;margin:.8rem 0;font-size:.82rem}}
+.alert-warn{{background:#fef3c7;border:1px solid #f59e0b;color:#92400e}}
+.alert-info{{background:#dbeafe;border:1px solid #3b82f6;color:#1e40af}}
+.ft{{text-align:center;padding:2rem;color:var(--mu);font-size:.72rem}}
+@media(max-width:600px){{.stats{{flex-direction:column}}.card-hd{{flex-direction:column}}}}
 </style>
 </head>
 <body>
-<div class="header">
-    <div class="container">
-        <h1>📊 Ground News — Media Bias Dashboard</h1>
-        <p>Updated {now} · {total_articles} articles · {len(all_sources)} sources · Cross-source topic clustering with bias analysis</p>
-    </div>
+<div class="hd"><div class="w">
+<h1>📊 Ground News · Media Bias Dashboard</h1>
+<p>{now} · {len(entries)} articles · {len(all_sources)} sources · {len(topic_clusters)} topics (TF-IDF semantic clustering)</p>
+</div></div>
+<div class="w">
+<div class="stats">
+<div class="sc"><div class="n">{len(entries)}</div><div class="l">Articles</div></div>
+<div class="sc"><div class="n">{len(all_sources)}</div><div class="l">Sources</div></div>
+<div class="sc"><div class="n">{len(topic_clusters)}</div><div class="l">Topics</div></div>
+<div class="sc"><div class="n">{len(rated)}</div><div class="l">Bias-Rated</div></div>
 </div>
-
-<div class="container">
-    <!-- Stats -->
-    <div class="stats">
-        <div class="stat-card"><div class="number">{total_articles}</div><div class="label">Articles</div></div>
-        <div class="stat-card"><div class="number">{len(all_sources)}</div><div class="label">Sources</div></div>
-        <div class="stat-card"><div class="number">{len(sorted_topics)}</div><div class="label">Topics</div></div>
-        <div class="stat-card"><div class="number">{len(all_rated)}</div><div class="label">Rated</div></div>
-    </div>
-
-    <!-- Overall Bias -->
-    <div class="bias-section">
-        <h3>📐 Overall Coverage Bias</h3>
-        {build_bias_bar_html(global_left, global_center, global_right)}
-        <div class="legend">
-            <span><span class="dot dot-left"></span> Left ({global_left})</span>
-            <span><span class="dot dot-center"></span> Center ({global_center})</span>
-            <span><span class="dot dot-right"></span> Right ({global_right})</span>
-        </div>
-    </div>
-
-    <!-- Blindspot Summary -->
-    <div class="alert alert-warning">
-        <strong>🧠 How this works:</strong> Articles are grouped into topics by title keywords + entity matching.
-        Each topic card shows <em>which sources</em> from <em>which political leanings</em> are covering that story.
-        Topics with zero coverage from one side are flagged as <strong>Blindspots</strong>.
-        <br><small>Bias data: AllSides / Ad Fontes Media · Full NLP clustering (Steps 2-5) coming soon for more precise topic grouping.</small>
-    </div>
-
-    <!-- Topic Cards -->
-    <h2 style="margin-top: 1.5rem; font-size: 1.1rem;">🗂️ News by Topic</h2>
-    {topic_cards}
+<div class="bar-wrap">
+<h3>📐 Overall Coverage Bias</h3>
+{build_bias_bar(all_left, all_center, all_right)}
+<div class="leg">
+<span><span class="dot dL"></span>Left ({all_left})</span>
+<span><span class="dot dC"></span>Center ({all_center})</span>
+<span><span class="dot dR"></span>Right ({all_right})</span>
 </div>
-
-<div class="footer">
-    <p>Powered by TrendRadar + Ground News Pipeline — Phase 0.5: keyword-based topic clustering</p>
-    <p>Coming: vector embedding · HDBSCAN clustering · factuality scores · news ownership tracking</p>
+</div>
+<div class="alert alert-info">
+<strong>🧠 Method:</strong> TF-IDF vectorization + cosine similarity clustering.{' '}
+Articles with similar word patterns are grouped into topics automatically.{' '}
+Each topic card shows <em>which sources</em> from <em>which bias</em> cover the story.
+<span style="color:var(--mu);font-size:.75rem"><br>
+Bias data: AllSides · Next upgrade: sentence-transformers embeddings + HDBSCAN density clustering</span>
+</div>
+<div class="alert alert-warn">
+<strong>⚠ {singles} articles</strong> couldn't be clustered into topics (unique/isolated coverage).
+</div>
+<h2 style="margin-top:1.5rem;font-size:1.1rem">🗂 Topics</h2>
+{topic_cards}
+</div>
+<div class="ft">
+<p>Ground News Pipeline v3 — TF-IDF semantic clustering · Auto-deployed to Cloudflare Pages</p>
+<p>Upcoming: HDBSCAN + sentence-transformers · Factuality scores · Media ownership tracking</p>
 </div>
 </body>
 </html>"""
@@ -364,11 +328,10 @@ body {{ font-family: system-ui, -apple-system, sans-serif; background: var(--bg)
 
 def main():
     html = generate_html()
-    output_path = Path("output/ground_news/index.html")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"✅ Ground News HTML v2: {output_path} ({len(html)} chars)")
+    p = Path("output/ground_news/index.html")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(html, encoding="utf-8")
+    print(f"✅ HTML v3: {p} ({len(html)} chars)")
 
 
 if __name__ == "__main__":

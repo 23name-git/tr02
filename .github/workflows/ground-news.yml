@@ -63,6 +63,14 @@ jobs:
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
           AI_API_BASE: ${{ secrets.AI_API_BASE }}
+          # COS 存储（复用 TrendRadar RemoteStorageBackend）
+          S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          # Cloudflare Pages 链接
+          CF_PAGES_URL: ${{ vars.CF_PAGES_URL || 'https://master.tr02.pages.dev' }}
           GITHUB_ACTIONS: true
         run: |
           set -e
@@ -70,16 +78,16 @@ jobs:
           echo "🚀 Ground News Pipeline - Mode: $MODE"
 
           if [ "$MODE" = "full" ] || [ "$MODE" = "fetch_only" ]; then
-            echo "📡 Step 1: Fetch Sources"
+            echo "📡 Step 1: Fetch Sources (RSS + agent-reach)"
             uv run ground-news-fetch
           fi
 
           if [ "$MODE" = "full" ] || [ "$MODE" = "push_only" ]; then
-            echo "📤 Step 6: Push to Feishu"
+            echo "📤 Step 6: Push to Feishu (with CF Pages link)"
             uv run ground-news-push
           fi
 
-          echo "📄 Generate Ground News HTML"
+          echo "📄 Generate Ground News HTML (TF-IDF clustering)"
           uv run python scripts/ground_news/generate_html.py
 
           echo "✅ Pipeline completed successfully"
