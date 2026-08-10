@@ -57,19 +57,6 @@ jobs:
             exit 1
           fi
 
-      - name: Debug COS credentials
-        env:
-          S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-        run: |
-          echo "=== COS Debug ==="
-          echo "ENDPOINT: ${S3_ENDPOINT_URL}"
-          echo "BUCKET:   ${S3_BUCKET_NAME}"
-          echo "REGION:   '${S3_REGION}'"
-          echo "contains myqcloud: $(echo ${S3_ENDPOINT_URL} | grep -c myqcloud || echo 0)"
-          echo "contains bucket in url: $(echo ${S3_ENDPOINT_URL} | grep -c ${S3_BUCKET_NAME} || echo 0)"
-
       - name: Run Ground News Pipeline
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
