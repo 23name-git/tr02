@@ -70,8 +70,13 @@ jobs:
           echo "🚀 Ground News Pipeline - Mode: $MODE"
 
           if [ "$MODE" = "full" ] || [ "$MODE" = "fetch_only" ]; then
-            echo "📡 Step 1: Fetch Sources (stdout mode)"
+            echo "📡 Step 1: Fetch Sources"
             uv run ground-news-fetch
           fi
 
-          echo "✅ Pipeline completed successfully (COS writes disabled — pending COS auth fix)"
+          if [ "$MODE" = "full" ] || [ "$MODE" = "push_only" ]; then
+            echo "📤 Step 6: Push to Feishu"
+            uv run ground-news-push
+          fi
+
+          echo "✅ Pipeline completed successfully"
