@@ -1,0 +1,22 @@
+[
+  {"source_domain": "reuters.com", "bias_rating": "least biased"},
+  {"source_domain": "apnews.com", "bias_rating": "least biased"},
+  {"source_domain": "bbc.com", "bias_rating": "least biased"},
+  {"source_domain": "nytimes.com", "bias_rating": "left-center"},
+  {"source_domain": "washingtonpost.com", "bias_rating": "left-center"},
+  {"source_domain": "theguardian.com", "bias_rating": "left-center"},
+  {"source_domain": "economist.com", "bias_rating": "least biased"},
+  {"source_domain": "ft.com", "bias_rating": "least biased"},
+  {"source_domain": "wsj.com", "bias_rating": "right-center"},
+  {"source_domain": "cnn.com", "bias_rating": "left"},
+  {"source_domain": "xinhuanet.com", "bias_rating": "left"},
+  {"source_domain": "people.com.cn", "bias_rating": "left"},
+  {"source_domain": "caixin.com", "bias_rating": "least biased"},
+  {"source_domain": "thepaper.cn", "bias_rating": "left-center"},
+  {"source_domain": "jiemian.com", "bias_rating": "least biased"},
+  {"source_domain": "36kr.com", "bias_rating": "least biased"},
+  {"source_domain": "huxiu.com", "bias_rating": "least biased"},
+  {"source_domain": "ifeng.com", "bias_rating": "left"},
+  {"source_domain": "techcrunch.com", "bias_rating": "least biased"},
+  {"source_domain": "technologyreview.com", "bias_rating": "least biased"}
+]
