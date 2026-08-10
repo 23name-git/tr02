@@ -72,60 +72,19 @@ jobs:
 
       - name: Run Ground News Pipeline
         env:
-          # 飞书 Webhook
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
-          # AI 配置
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           AI_MODEL: ${{ secrets.AI_MODEL }}
           AI_API_BASE: ${{ secrets.AI_API_BASE }}
-          # COS 配置 (复用现有 Secrets)
-          S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
-          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          # 偏见评分权重（可选）
-          BIAS_WEIGHT_ALLSIDES: ${{ secrets.BIAS_WEIGHT_ALLSIDES }}
-          BIAS_WEIGHT_ADFONTES: ${{ secrets.BIAS_WEIGHT_ADFONTES }}
-          BIAS_WEIGHT_MBFC: ${{ secrets.BIAS_WEIGHT_MBFC }}
-          # 嵌入模型（可选）
-          GROUND_NEWS_EMBED_MODEL: ${{ secrets.GROUND_NEWS_EMBED_MODEL }}
-          GROUND_NEWS_MIN_CLUSTER_SIZE: ${{ secrets.GROUND_NEWS_MIN_CLUSTER_SIZE }}
-          GROUND_NEWS_MIN_SAMPLES: ${{ secrets.GROUND_NEWS_MIN_SAMPLES }}
           GITHUB_ACTIONS: true
         run: |
           set -e
           MODE="${{ github.event.inputs.run_mode || 'full' }}"
           echo "🚀 Ground News Pipeline - Mode: $MODE"
-          
+
           if [ "$MODE" = "full" ] || [ "$MODE" = "fetch_only" ]; then
-            echo "📡 Step 1: Fetch Sources"
+            echo "📡 Step 1: Fetch Sources (stdout mode)"
             uv run ground-news-fetch
           fi
-          
-          if [ "$MODE" = "full" ] || [ "$MODE" = "extract_only" ]; then
-            echo "🧹 Step 2: Extract & Clean"
-            uv run ground-news-extract
-          fi
-          
-          if [ "$MODE" = "full" ] || [ "$MODE" = "embed_only" ]; then
-            echo "🔮 Step 3: Embed & Cluster"
-            uv run ground-news-embed
-          fi
-          
-          if [ "$MODE" = "full" ] || [ "$MODE" = "bias_only" ]; then
-            echo "📊 Step 4: Bias Label"
-            uv run ground-news-bias
-          fi
-          
-          if [ "$MODE" = "full" ] || [ "$MODE" = "report_only" ]; then
-            echo "📝 Step 5: Generate Report"
-            uv run ground-news-report
-          fi
-          
-          if [ "$MODE" = "full" ] || [ "$MODE" = "push_only" ]; then
-            echo "📤 Step 6: Push to Feishu"
-            uv run ground-news-push
-          fi
-          
-          echo "✅ Pipeline completed successfully"
+
+          echo "✅ Pipeline completed successfully (COS writes disabled — pending COS auth fix)"

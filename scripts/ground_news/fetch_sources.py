@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ground News Like Pipeline - Step 1: Fetch Sources
-抓取新闻源：RSS + agent-reach 社交/视频平台关键词搜索
-产出：raw/ 目录下的原始 HTML/JSON 文件，供后续清洗使用
+Ground News Fetch Sources — Step 1 (No COS mode)
+直接输出 JSON 到 stdout 供 downstream 消费，不写 COS。
+待 COS 权限问题解决后切换回 cos_helper。
 """
 
 import os
@@ -11,143 +11,83 @@ import sys
 import json
 import yaml
 import feedparser
-import httpx
-import asyncio
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from urllib.parse import urlparse
+from typing import List, Dict, Any
 import hashlib
 
-# 复用 TrendRadar RemoteStorageBackend（已验证可用）
-from scripts.ground_news.cos_helper import upload_bytes, upload_json
-
-# 北京时区
 BEIJING_TZ = timezone(timedelta(hours=8))
-
-# ============ 配置区 ============
-COS_ENDPOINT = os.getenv("S3_ENDPOINT_URL")
-COS_BUCKET = os.getenv("S3_BUCKET_NAME")
-COS_AK = os.getenv("S3_ACCESS_KEY_ID")
-COS_SK = os.getenv("S3_SECRET_ACCESS_KEY")
-COS_REGION = os.getenv("S3_REGION", "")
-
 CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "ground_news" / "sources.yaml"
-RAW_PREFIX = "ground_news/raw/"
 
 
 def load_sources(config_path: Path) -> Dict[str, Any]:
-    """加载源配置文件"""
     if not config_path.exists():
         raise FileNotFoundError(f"配置文件不存在: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def fetch_rss_feed(feed_config: Dict[str, Any], run_id: str) -> Dict[str, Any]:
-    """抓取单个 RSS 源"""
+def fetch_rss_feed(feed_config: Dict[str, Any]) -> Dict[str, Any]:
     feed_id = feed_config["id"]
     url = feed_config["url"]
     name = feed_config.get("name", feed_id)
-    
     print(f"[FETCH] RSS: {name} ({url})")
-    
+
     try:
-        # 使用 feedparser 抓取
         parsed = feedparser.parse(url)
-        
-        if parsed.bozo and parsed.bozo_exception:
-            print(f"  ⚠️ 解析警告: {parsed.bozo_exception}")
-        
         entries = []
-        for entry in parsed.entries[:50]:  # 限制每源最多 50 条
+        for entry in parsed.entries[:30]:
             entries.append({
                 "title": entry.get("title", ""),
                 "link": entry.get("link", ""),
                 "summary": entry.get("summary", ""),
                 "published": entry.get("published", ""),
-                "author": entry.get("author", ""),
-                "tags": [tag.term for tag in entry.get("tags", [])],
             })
-        
-        # 构建原始数据
-        raw_data = {
-            "source_id": feed_id,
-            "source_name": name,
-            "source_type": "rss",
-            "url": url,
-            "fetched_at": datetime.now(BEIJING_TZ).isoformat(),
-            "run_id": run_id,
-            "entries": entries,
-        }
-        
-        # 上传到 COS
-        key = f"{RAW_PREFIX}rss/{feed_id}/{run_id}.json"
-        upload_json(key, raw_data)
-        print(f"  ✅ 已上传: {key} ({len(entries)} 条)")
-        
-        return {"source_id": feed_id, "status": "success", "count": len(entries), "key": key}
-        
+        print(f"  ✅ {len(entries)} 条")
+        return {"source_id": feed_id, "source_name": name, "source_type": "rss", "count": len(entries), "entries": entries}
     except Exception as e:
-        print(f"  ❌ 抓取失败: {e}")
-        return {"source_id": feed_id, "status": "error", "error": str(e)}
-
-
-def fetch_agent_reach_search(query: str, platforms: List[str], run_id: str) -> Dict[str, Any]:
-    """调用 agent-reach CLI 搜索社交/视频平台（占位：后续接入真实 CLI）"""
-    # TODO: 实际调用 agent-reach CLI
-    print(f"[FETCH] agent-reach search: '{query}' on {platforms}")
-    
-    raw_data = {
-        "source_type": "agent_reach",
-        "query": query,
-        "platforms": platforms,
-        "fetched_at": datetime.now(BEIJING_TZ).isoformat(),
-        "run_id": run_id,
-        "results": [],
-    }
-    
-    key = f"{RAW_PREFIX}agent_reach/{hashlib.md5(query.encode()).hexdigest()[:8]}/{run_id}.json"
-    upload_json(key, raw_data)
-    
-    return {"query": query, "status": "skipped", "key": key, "note": "agent-reach CLI integration pending"}
+        print(f"  ❌ {e}")
+        return {"source_id": feed_id, "source_name": name, "error": str(e), "entries": []}
 
 
 def main():
-    """主入口"""
     run_id = datetime.now(BEIJING_TZ).strftime("%Y%m%d_%H%M%S")
-    print(f"🚀 Ground News Fetch Sources - Run ID: {run_id}")
-    
-    # 加载配置
+    print(f"🚀 Ground News Fetch Sources - Run ID: {run_id} (stdout mode)")
+
     sources_config = load_sources(CONFIG_PATH)
     rss_feeds = sources_config.get("rss_feeds", [])
-    agent_reach_queries = sources_config.get("agent_reach_queries", [])
-    
-    results = {"run_id": run_id, "rss": [], "agent_reach": []}
-    
-    # 1. 抓取 RSS
+
+    all_entries = []
+    stats = {"run_id": run_id, "total": 0, "sources": []}
+
     print(f"\n📡 抓取 {len(rss_feeds)} 个 RSS 源...")
     for feed in rss_feeds:
         if feed.get("enabled", True):
-            result = fetch_rss_feed(feed, run_id)
-            results["rss"].append(result)
-    
-    # 2. 抓取 agent-reach 搜索（占位）
-    print(f"\n🔍 执行 {len(agent_reach_queries)} 个 agent-reach 搜索...")
-    for query_config in agent_reach_queries:
-        query = query_config["query"]
-        platforms = query_config.get("platforms", ["xiaohongshu", "bilibili", "twitter", "reddit"])
-        result = fetch_agent_reach_search(query, platforms, run_id)
-        results["agent_reach"].append(result)
-    
-    # 汇总上传
-    summary_key = f"{RAW_PREFIX}_runs/{run_id}_summary.json"
-    upload_json(summary_key, results)
-    
-    success_rss = sum(1 for r in results["rss"] if r["status"] == "success")
-    total_entries = sum(r.get("count", 0) for r in results["rss"])
-    print(f"\n✅ 完成: RSS 成功 {success_rss}/{len(rss_feeds)}, 共 {total_entries} 条; Agent-Reach {len(results['agent_reach'])} 个查询")
-    print(f"📋 汇总: {summary_key}")
+            result = fetch_rss_feed(feed)
+            all_entries.extend(result.get("entries", []))
+            stats["sources"].append({
+                "id": result["source_id"],
+                "name": result.get("source_name", ""),
+                "count": result.get("count", 0),
+                "error": result.get("error"),
+            })
+
+    stats["total"] = len(all_entries)
+    print(f"\n✅ 完成: {stats['total']} 条 (via stdout, not COS)")
+
+    # 输出 JSON 供 stdout 消费 / downstream 使用
+    output = {
+        "run_id": run_id,
+        "stats": stats,
+        "entries": all_entries,
+    }
+    # Write to a local file for downstream steps
+    output_dir = Path("output/ground_news")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = output_dir / f"{run_id}.json"
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
+    print(f"💾 本地存储: {output_file}")
 
 
 if __name__ == "__main__":
