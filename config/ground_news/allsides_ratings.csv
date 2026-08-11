@@ -1,6 +1,4 @@
 source_domain,bias_rating
-reuters.com,Center
-apnews.com,Center
 bbc.com,Center
 nytimes.com,Lean Left
 washingtonpost.com,Lean Left
@@ -9,13 +7,65 @@ economist.com,Center
 ft.com,Center
 wsj.com,Lean Right
 cnn.com,Lean Left
-xinhuanet.com,Left
-people.com.cn,Left
+scmp.com,Center
+aljazeera.com,Lean Left
+reuters.com,Center
+apnews.com,Center
+people.com.cn,Lean Left
+ithome.com,Center
+techcrunch.com,Center
+technologyreview.com,Center
+ycombinator.com,Center
+theverge.com,Lean Left
+arstechnica.com,Center
+wired.com,Lean Left
+npr.org,Center
+bloomberg.com,Center
+cnbc.com,Center
+marketwatch.com,Center
+businessinsider.com,Center
+forbes.com,Center
+fortune.com,Center
+nikkei.com,Center
+straitstimes.com,Center
+indiatimes.com,Center
+japantimes.co.jp,Center
+koreaherald.com,Center
+abc.net.au,Center
+dw.com,Center
+france24.com,Center
+euronews.com,Center
+spiegel.de,Lean Left
+scientificamerican.com,Center
+newscientist.com,Center
+nationalgeographic.com,Center
+livescience.com,Center
+zdnet.com,Center
+engadget.com,Center
+gizmodo.com,Lean Left
+theregister.com,Center
+hnrss.org,Center
+chinanews.com,Center
+zaobao.com,Center
+huanqiu.com,Lean Left
 caixin.com,Center
 thepaper.cn,Lean Left
 jiemian.com,Center
-36kr.com,Center
+cls.cn,Center
+wallstreetcn.com,Center
 huxiu.com,Center
-ifeng.com,Lean Left
-techcrunch.com,Center
-technologyreview.com,Center
+ifeng.com,Center
+xueqiu.com,Center
+voanews.com,Center
+nature.com,Center
+github.com,Center
+producthunt.com,Center
+foxnews.com,Right
+huffpost.com,Lean Left
+breitbart.com,Right
+dailymail.co.uk,Right
+theatlantic.com,Lean Left
+vox.com,Lean Left
+politico.com,Center
+axios.com,Center
+thehill.com,Center
