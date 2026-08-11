@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ground News HTML v3 — 向量语义聚类 + 逐话题 Bias Bar + 盲点 + 源透明度
-- 使用 TF-IDF + cosine similarity 做跨源话题聚类
-- 可选 sentence-transformers（安装后自动启用）
-- 按话题分组（非按源），每话题一条 Bias Bar
+Ground News HTML v4 — 向量聚类 + 周期性对比 + 话题趋势 + 盲点 + 源透明度
+- TF-IDF + cosine similarity 语义聚类
+- COS 加载昨天数据 → 标注 🔥 NEW / 📈 rising / 📉 declining
+- <15% 盲点检测
+- 源级 AllSides 偏见标签
 """
 
-import json, csv, yaml, re, os
+import json, csv, yaml, os, re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from collections import Counter, defaultdict
 import warnings
 warnings.filterwarnings("ignore")
@@ -21,327 +22,288 @@ BEIJING_TZ = timezone(timedelta(hours=8))
 OUTPUT_DIR = Path("output/ground_news")
 CONFIG_DIR = Path("config/ground_news")
 
-# ===================== 向量聚类引擎 =====================
-
-def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.08) -> Dict[str, List[Dict]]:
-    """TF-IDF + cosine similarity 聚类（阈值 0.08，最少 3 篇成簇）"""
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.metrics.pairwise import cosine_similarity
-
-    titles = [e.get("title", "") for e in entries]
-    if len(titles) < 2:
-        return {"All News": entries}
-
-    # 中英文混合停用词
-    zh_stop = set("的了吗呢嘛哦啊嗯吧呀在和有是我他这不也人了就到说要去能为都个中上大对会可以自后下没看好只还过")
-    en_stop = {"the","a","an","is","are","was","were","be","been","in","on","at","to","for","of","and","or","but",
-               "it","its","that","this","with","from","by","as","not","no","has","have","had","will","would","can",
-               "could","may","should","new","more","says","after","over","into","first","than","just","about","what"}
-    all_stop = list(zh_stop | en_stop)
-
-    vectorizer = TfidfVectorizer(
-        stop_words=all_stop,
-        max_features=800,
-        ngram_range=(1, 2),  # unigrams + bigrams
-    )
-    try:
-        tfidf_matrix = vectorizer.fit_transform(titles)
-        sim_matrix = cosine_similarity(tfidf_matrix)
-    except Exception:
-        return {"All News": entries}
-
-    # 贪婪聚类
-    n = len(entries)
-    assigned = [False] * n
-    clusters: Dict[int, List[int]] = {}
-
-    for i in range(n):
-        if assigned[i]:
-            continue
-        cluster = [i]
-        assigned[i] = True
-        for j in range(i + 1, n):
-            if not assigned[j] and sim_matrix[i][j] >= similarity_threshold:
-                cluster.append(j)
-                assigned[j] = True
-        if len(cluster) >= 3:  # 至少 3 篇成簇
-            clusters[len(clusters)] = cluster
-
-    # 命名
-    feature_names = vectorizer.get_feature_names_out()
-    result = {}
-    for cid, indices in clusters.items():
-        centroid = np.mean(tfidf_matrix[indices].toarray(), axis=0)
-        top_indices = np.argsort(centroid)[-5:][::-1]
-        keywords = [feature_names[k] for k in top_indices if centroid[k] > 0.05]
-        topic_name = " / ".join(keywords[:3]) if keywords else f"Topic {cid + 1}"
-        result[topic_name] = [entries[i] for i in indices]
-
-    return dict(sorted(result.items(), key=lambda x: -len(x[1])))
-
-
 # ===================== 数据加载 =====================
 
-def load_latest_output() -> Optional[Dict[str, Any]]:
-    if not OUTPUT_DIR.exists():
-        return None
+def load_latest_output() -> Optional[Dict]:
+    if not OUTPUT_DIR.exists(): return None
     files = sorted(OUTPUT_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
-    if not files:
-        return None
-    with open(files[0], "r", encoding="utf-8") as f:
-        return json.load(f)
+    return json.loads(files[0].read_text(encoding="utf-8")) if files else None
 
+def load_previous_output() -> Optional[Dict]:
+    """COS 或本地读上一次数据"""
+    # COS
+    try:
+        from trendradar.storage.remote import RemoteStorageBackend
+        ep = os.getenv("S3_ENDPOINT_URL","").strip()
+        bk = os.getenv("S3_BUCKET_NAME","").strip()
+        ak = os.getenv("S3_ACCESS_KEY_ID","").strip()
+        sk = os.getenv("S3_SECRET_ACCESS_KEY","").strip()
+        rg = os.getenv("S3_REGION","").strip()
+        if all([ep,bk,ak,sk]):
+            s = RemoteStorageBackend(bucket_name=bk,access_key_id=ak,secret_access_key=sk,endpoint_url=ep,region=rg if rg else None)
+            resp = s.s3_client.list_objects_v2(Bucket=bk,Prefix="ground_news/raw/",MaxKeys=5)
+            keys = sorted([o["Key"] for o in resp.get("Contents",[])], reverse=True)
+            if len(keys)>=2:
+                r = s.s3_client.get_object(Bucket=bk,Key=keys[1])
+                print(f"  📥 COS prev: {keys[1]}")
+                return json.loads(r["Body"].read())
+    except Exception as e:
+        print(f"  ℹ️ COS prev: {e}")
+    # 本地
+    if OUTPUT_DIR.exists():
+        files = sorted(OUTPUT_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if len(files)>=2:
+            print(f"  📥 Local prev: {files[1].name}")
+            return json.loads(files[1].read_text(encoding="utf-8"))
+    return None
 
-def load_bias_ratings() -> Dict[str, str]:
+def load_bias_ratings() -> Dict[str,str]:
     ratings = {}
-    csv_path = CONFIG_DIR / "allsides_ratings.csv"
-    if csv_path.exists():
-        with open(csv_path, "r", encoding="utf-8-sig") as f:
-            for row in csv.DictReader(f):
-                domain = row.get("source_domain", "").strip().lower()
-                bias = row.get("bias_rating", "").strip()
-                if domain and bias:
-                    ratings[domain] = bias
+    p = CONFIG_DIR / "allsides_ratings.csv"
+    if p.exists():
+        with open(p,"r",encoding="utf-8-sig") as f:
+            for r in csv.DictReader(f):
+                d = r.get("source_domain","").strip().lower()
+                b = r.get("bias_rating","").strip()
+                if d and b: ratings[d]=b
     return ratings
 
-
-def extract_domain(url: str) -> str:
+def extract_domain(url:str)->str:
     from urllib.parse import urlparse
-    try:
-        return urlparse(url).netloc.lower().replace("www.", "")
-    except Exception:
-        return ""
+    try: return urlparse(url).netloc.lower().replace("www.","")
+    except: return ""
 
-
-def bias_to_category(bias: str) -> str:
-    b = bias.lower()
-    if "left" in b: return "left"
-    if "right" in b: return "right"
+def bias_to_category(b:str)->str:
+    bl=b.lower()
+    if "left" in bl: return "left"
+    if "right" in bl: return "right"
     return "center"
 
+# ===================== 聚类 + 趋势 =====================
+
+def cluster_articles_tfidf(entries:List, threshold:float=0.08)->Dict:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    titles=[e.get("title","") for e in entries]
+    if len(titles)<2: return {"All News":entries}
+    zh_stop=set("的了吗呢嘛哦啊嗯吧呀在和有是我他这不也人了就到说要去能为都个中上大对会可以自后下没看好只还过")
+    en_stop={"the","a","an","is","are","was","were","be","in","on","at","to","for","of","and","or","but","it","its","that","this","with","from","by","as","not","no","has","have","had","will","would","can","could","may","should","new","more","says","after","over","into","first","than","just","about","what"}
+    vec=TfidfVectorizer(stop_words=list(zh_stop|en_stop),max_features=800,ngram_range=(1,2))
+    try:
+        m=vec.fit_transform(titles); sim=cosine_similarity(m)
+    except: return {"All News":entries}
+    n=len(entries); assigned=[False]*n; clusters={}
+    for i in range(n):
+        if assigned[i]: continue
+        cl=[i]; assigned[i]=True
+        for j in range(i+1,n):
+            if not assigned[j] and sim[i][j]>=threshold: cl.append(j); assigned[j]=True
+        if len(cl)>=3: clusters[len(clusters)]=cl
+    fn=vec.get_feature_names_out(); result={}
+    for cid,idx in clusters.items():
+        centroid=np.mean(m[idx].toarray(),axis=0)
+        top=np.argsort(centroid)[-5:][::-1]
+        kw=[fn[k] for k in top if centroid[k]>0.05]
+        name=" / ".join(kw[:3]) if kw else f"Topic {cid+1}"
+        result[name]=[entries[i] for i in idx]
+    return dict(sorted(result.items(),key=lambda x:-len(x[1])))
+
+def compute_trends(today:Dict,prev:Optional[Dict])->Dict[str,str]:
+    if not prev: return {t:"" for t in today}
+    prev_titles=set(e.get("title","")[:80] for e in prev.get("entries",[]))
+    trends={}
+    for tn,entries in today.items():
+        today_titles=set(e.get("title","")[:80] for e in entries)
+        overlap=today_titles&prev_titles
+        if len(overlap)==0: trends[tn]="🔥 NEW"
+        elif len(overlap)<len(today_titles)*0.3: trends[tn]="📈 rising"
+        else: trends[tn]=""
+    return trends
 
 # ===================== HTML 组件 =====================
 
-def build_bias_bar(left: int, center: int, right: int) -> str:
-    total = left + center + right
-    if total == 0:
-        lp = rp = cp = 0
-    else:
-        lp = round(left / total * 100)
-        rp = round(right / total * 100)
-        cp = 100 - lp - rp
-    return f"""<div class="bias-bar">
-        <span class="bar-left" style="width:{lp}%"></span>
-        <span class="bar-center" style="width:{cp}%"></span>
-        <span class="bar-right" style="width:{rp}%"></span>
-    </div>
-    <div class="bias-labels"><span>{lp}% L ({left})</span><span>{cp}% C ({center})</span><span>{rp}% R ({right})</span></div>"""
-
+def bias_bar(l,c,r)->str:
+    t=l+c+r
+    if t==0: lp=rp=cp=0
+    else: lp=round(l/t*100); rp=round(r/t*100); cp=100-lp-rp
+    return f'<div class="bb"><span class="bl" style="width:{lp}%"></span><span class="bc" style="width:{cp}%"></span><span class="br" style="width:{rp}%"></span></div><div class="bll"><span>{lp}% L ({l})</span><span>{cp}% C ({c})</span><span>{rp}% R ({r})</span></div>'
 
 # ===================== 主逻辑 =====================
 
-def generate_html() -> str:
-    output = load_latest_output()
-    bias_ratings = load_bias_ratings()
+def generate_html()->str:
+    output=load_latest_output()
+    if not output: return "<html><body><h1>No data</h1></body></html>"
+    prev=load_previous_output()
+    bias_r=load_bias_ratings()
 
-    if not output:
-        return "<html><body><h1>No data</h1></body></html>"
+    entries=output.get("entries",[])
+    stats=output.get("stats",{})
+    run_id=output.get("run_id","")
+    now=datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M")
 
-    entries = output.get("entries", [])
-    stats = output.get("stats", {})
-    run_id = output.get("run_id", "")
-    now = datetime.now(BEIJING_TZ).strftime("%Y-%m-%d %H:%M %Z")
-
-    # 丰富偏见信息
     for e in entries:
-        e["_domain"] = extract_domain(e.get("link", ""))
-        e["_bias"] = bias_ratings.get(e["_domain"], "Unknown")
-        e["_category"] = bias_to_category(e["_bias"])
+        e["_d"]=extract_domain(e.get("link",""))
+        e["_b"]=bias_r.get(e["_d"],"Unknown")
+        e["_c"]=bias_to_category(e["_b"])
 
-    # ===== 向量语义聚类 =====
     print(f"  🧮 Clustering {len(entries)} articles...")
-    topic_clusters = cluster_articles_tfidf(entries)
-    print(f"  📊 {len(topic_clusters)} topics found")
+    topics=cluster_articles_tfidf(entries)
+    trends=compute_trends(topics,prev)
+    print(f"  📊 {len(topics)} topics")
 
-    # ===== 全部统计 =====
-    rated = [e for e in entries if e["_bias"] != "Unknown"]
-    all_left = sum(1 for e in rated if e["_category"] == "left")
-    all_center = sum(1 for e in rated if e["_category"] == "center")
-    all_right = sum(1 for e in rated if e["_category"] == "right")
-    all_sources = set(e.get("source_name", "?") for e in entries)
+    rated=[e for e in entries if e["_b"]!="Unknown"]
+    al=sum(1 for e in rated if e["_c"]=="left")
+    ac=sum(1 for e in rated if e["_c"]=="center")
+    ar=sum(1 for e in rated if e["_c"]=="right")
+    all_src=set(e.get("source_name","?") for e in entries)
 
-    # ===== 话题卡片 =====
-    topic_cards = ""
-    for topic_name, topic_entries in topic_clusters.items():
-        if len(topic_entries) < 2:
-            continue  # 跳过单篇孤岛
+    # 趋势摘要
+    new_count=sum(1 for v in trends.values() if "NEW" in v)
+    rising_count=sum(1 for v in trends.values() if "rising" in v)
+    trend_summary=""
+    if prev:
+        trend_summary=f'<div class="alert alert-info">🔄 <strong>vs Previous Run:</strong> {new_count} new topics · {rising_count} rising · {len(prev.get("entries",[]))}→{len(entries)} articles</div>'
 
-        rated_t = [e for e in topic_entries if e["_bias"] != "Unknown"]
-        left_n = sum(1 for e in rated_t if e["_category"] == "left")
-        center_n = sum(1 for e in rated_t if e["_category"] == "center")
-        right_n = sum(1 for e in rated_t if e["_category"] == "right")
-        total_rated = left_n + center_n + right_n
+    topic_cards=""
+    for tn,te in topics.items():
+        if len(te)<3: continue
+        rt=[e for e in te if e["_b"]!="Unknown"]
+        ln=sum(1 for e in rt if e["_c"]=="left")
+        cn=sum(1 for e in rt if e["_c"]=="center")
+        rn=sum(1 for e in rt if e["_c"]=="right")
+        tr=ln+cn+rn
+        trend=trends.get(tn,"")
 
-        # 盲点检测（<15% 覆盖率即标）
-        blindspot = ""
-        if total_rated >= 3:
-            left_pct = left_n / total_rated * 100 if total_rated else 0
-            right_pct = right_n / total_rated * 100 if total_rated else 0
-            if left_pct < 15 and right_pct >= 15:
-                blindspot = '<span class="blindspot-tag">⚠ Left Blindspot</span>'
-            elif right_pct < 15 and left_pct >= 15:
-                blindspot = '<span class="blindspot-tag">⚠ Right Blindspot</span>'
+        # 盲点
+        bsp=""
+        if tr>=3:
+            lp=ln/tr*100 if tr else 0; rp=rn/tr*100 if tr else 0
+            if lp<15 and rp>=15: bsp='<span class="bs">⚠ Left Blindspot</span>'
+            elif rp<15 and lp>=15: bsp='<span class="bs">⚠ Right Blindspot</span>'
 
         # 源标签
-        src_map = defaultdict(list)
-        for e in topic_entries:
-            src_map[e.get("source_name", "?")].append(e)
-        source_tags = ""
-        for sn, se in sorted(src_map.items(), key=lambda x: -len(x[1])):
-            bias_c = se[0].get("_bias", "Unknown").lower().replace(" ", "-")
-            source_tags += f'<span class="src-tag {bias_c}">{sn} ({len(se)})</span> '
+        sm=defaultdict(list)
+        for e in te: sm[e.get("source_name","?")].append(e)
+        st=""
+        for sn,se in sorted(sm.items(),key=lambda x:-len(x[1])):
+            bc=se[0].get("_b","Unknown").lower().replace(" ","-")
+            st+=f'<span class="st {bc}">{sn} ({len(se)})</span> '
 
-        # 文章列表（每源取1篇，最多10篇）
-        shown, seen = [], set()
-        for e in topic_entries:
-            s = e.get("source_name", "?")
-            if s not in seen:
-                shown.append(e); seen.add(s)
-                if len(shown) >= 10: break
-        if len(shown) < 10:
-            shown += [e for e in topic_entries if e not in shown][:10 - len(shown)]
+        # 文章列表
+        shown,seen=[],set()
+        for e in te:
+            s=e.get("source_name","?")
+            if s not in seen: shown.append(e); seen.add(s)
+            if len(shown)>=8: break
+        if len(shown)<8:
+            shown+=[e for e in te if e not in shown][:8-len(shown)]
 
-        article_rows = ""
+        ars=""
         for e in shown:
-            bc = e["_bias"].lower().replace(" ", "-")
-            article_rows += f"""<div class="art-row">
-                <span class="art-src {bc}">{e.get('source_name','?')}</span>
-                <a href="{e.get('link','#')}" target="_blank">{e.get('title','(untitled)')}</a>
-            </div>"""
+            bc=e["_b"].lower().replace(" ","-")
+            ars+=f'<div class="ar"><span class="as {bc}">{e.get("source_name","?")}</span><a href="{e.get("link","#")}" target="_blank">{e.get("title","?")}</a></div>'
+        rem=len(te)-len(shown)
+        if rem>0: ars+=f'<div class="ar m">+{rem} more</div>'
 
-        remaining = len(topic_entries) - len(shown)
-        if remaining > 0:
-            article_rows += f'<div class="art-row more">+{remaining} more</div>'
+        topic_cards+=f"""<div class="card">
+<div class="ch"><h3>{trend} {tn} {bsp}</h3><span class="cnt">{len(te)} articles · {len(sm)} sources</span></div>
+{bias_bar(ln,cn,rn)}
+<div class="sts">{st}</div>
+<div class="alist">{ars}</div>
+</div>"""
 
-        topic_cards += f"""<div class="card">
-            <div class="card-hd">
-                <h3>{topic_name} {blindspot}</h3>
-                <span class="cnt">{len(topic_entries)} articles · {len(src_map)} sources</span>
-            </div>
-            {build_bias_bar(left_n, center_n, right_n)}
-            <div class="src-tags">{source_tags}</div>
-            <div class="art-list">{article_rows}</div>
-        </div>"""
+    singles=sum(1 for v in topics.values() if len(v)<3)
 
-    # 统计单篇（未聚类成功的）
-    singles = sum(1 for v in topic_clusters.values() if len(v) < 2)
-
-    # ===== HTML =====
-    html = f"""<!DOCTYPE html>
+    html=f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ground News — Media Bias Dashboard</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ground News — Bias Dashboard</title>
 <style>
 :root{{--L:#2563eb;--C:#9ca3af;--R:#dc2626;--bg:#f1f5f9;--card:#fff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0}}
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{font-family:system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5}}
 .hd{{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:2.5rem 0}}
 .hd h1{{font-size:1.5rem;font-weight:800}}
-.hd p{{color:#94a3b8;font-size:.85rem;margin-top:.4rem}}
+.hd p{{color:#94a3b8;font-size:.82rem;margin-top:.4rem}}
 .w{{max-width:840px;margin:0 auto;padding:0 1rem}}
 .stats{{display:flex;gap:.8rem;margin:1.2rem 0;flex-wrap:wrap}}
 .sc{{background:var(--card);border-radius:10px;padding:1rem 1.2rem;flex:1;min-width:100px;box-shadow:0 1px 3px #0001}}
 .sc .n{{font-size:1.8rem;font-weight:800}}
-.sc .l{{color:var(--mu);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}}
-.bar-wrap{{background:var(--card);border-radius:10px;padding:1.2rem;margin:1rem 0;box-shadow:0 1px 3px #0001}}
-.bar-wrap h3{{font-size:.9rem;margin-bottom:.8rem}}
-.bias-bar{{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:.6rem}}
-.bar-left{{background:var(--L)}}.bar-center{{background:var(--C)}}.bar-right{{background:var(--R)}}
-.bias-labels{{display:flex;justify-content:space-between;font-size:.78rem;color:var(--mu)}}
-.leg{{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.6rem;font-size:.75rem}}
-.leg .dot{{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}}
+.sc .l{{color:var(--mu);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}}
+.bw{{background:var(--card);border-radius:10px;padding:1.2rem;margin:1rem 0;box-shadow:0 1px 3px #0001}}
+.bw h3{{font-size:.9rem;margin-bottom:.8rem}}
+.bb{{display:flex;height:20px;border-radius:10px;overflow:hidden;margin-bottom:.6rem}}
+.bl{{background:var(--L)}}.bc{{background:var(--C)}}.br{{background:var(--R)}}
+.bll{{display:flex;justify-content:space-between;font-size:.76rem;color:var(--mu)}}
+.leg{{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.6rem;font-size:.72rem}}
+.leg .d{{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px}}
 .dL{{background:var(--L)}}.dC{{background:var(--C)}}.dR{{background:var(--R)}}
 .card{{background:var(--card);border-radius:10px;padding:1.2rem;margin:.8rem 0;box-shadow:0 1px 3px #0001}}
-.card-hd{{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;flex-wrap:wrap}}
-.card-hd h3{{font-size:1rem;font-weight:700}}
-.cnt{{font-size:.72rem;color:var(--mu);white-space:nowrap}}
-.blindspot-tag{{background:#fef3c7;color:#d97706;font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}}
-.src-tags{{display:flex;flex-wrap:wrap;gap:4px;margin:.5rem 0}}
-.src-tag{{font-size:.68rem;padding:1px 8px;border-radius:10px;font-weight:600;white-space:nowrap}}
-.src-tag.left{{background:#dbeafe;color:#1d4ed8}}.src-tag.lean-left{{background:#eff6ff;color:#3b82f6}}
-.src-tag.center{{background:#f1f5f9;color:#475569}}
-.src-tag.lean-right{{background:#fef2f2;color:#ef4444}}.src-tag.right{{background:#fee2e2;color:#b91c1c}}
-.src-tag.unknown{{background:#f8fafc;color:#94a3b8}}
-.art-list{{margin-top:.8rem}}
-.art-row{{display:flex;gap:.5rem;align-items:baseline;padding:.35rem 0;border-bottom:1px solid var(--bd);font-size:.86rem}}
-.art-row:last-child{{border-bottom:none}}
-.art-row a{{color:var(--tx);text-decoration:none;flex:1}}
-.art-row a:hover{{color:#2563eb}}
-.art-row.more{{color:var(--mu);font-style:italic;font-size:.78rem}}
-.art-src{{font-size:.62rem;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap;min-width:55px;text-align:center}}
-.art-src.left{{background:#dbeafe;color:#1d4ed8}}.art-src.lean-left{{background:#eff6ff;color:#3b82f6}}
-.art-src.center{{background:#f1f5f9;color:#475569}}
-.art-src.lean-right{{background:#fef2f2;color:#ef4444}}.art-src.right{{background:#fee2e2;color:#b91c1c}}
-.art-src.unknown{{background:#f8fafc;color:#94a3b8}}
-.alert{{border-radius:8px;padding:.8rem 1rem;margin:.8rem 0;font-size:.82rem}}
-.alert-warn{{background:#fef3c7;border:1px solid #f59e0b;color:#92400e}}
+.ch{{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;flex-wrap:wrap}}
+.ch h3{{font-size:1rem;font-weight:700}}
+.cnt{{font-size:.7rem;color:var(--mu);white-space:nowrap}}
+.bs{{background:#fef3c7;color:#d97706;font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px}}
+.sts{{display:flex;flex-wrap:wrap;gap:4px;margin:.5rem 0}}
+.st{{font-size:.66rem;padding:1px 8px;border-radius:10px;font-weight:600;white-space:nowrap}}
+.st.left{{background:#dbeafe;color:#1d4ed8}}.st.lean-left{{background:#eff6ff;color:#3b82f6}}
+.st.center{{background:#f1f5f9;color:#475569}}
+.st.lean-right{{background:#fef2f2;color:#ef4444}}.st.right{{background:#fee2e2;color:#b91c1c}}
+.st.unknown{{background:#f8fafc;color:#94a3b8}}
+.alist{{margin-top:.8rem}}
+.ar{{display:flex;gap:.5rem;align-items:baseline;padding:.35rem 0;border-bottom:1px solid var(--bd);font-size:.84rem}}
+.ar:last-child{{border-bottom:none}}
+.ar a{{color:var(--tx);text-decoration:none;flex:1}}
+.ar a:hover{{color:#2563eb}}
+.ar.m{{color:var(--mu);font-style:italic;font-size:.76rem}}
+.as{{font-size:.6rem;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap;min-width:50px;text-align:center}}
+.as.left{{background:#dbeafe;color:#1d4ed8}}.as.lean-left{{background:#eff6ff;color:#3b82f6}}
+.as.center{{background:#f1f5f9;color:#475569}}
+.as.lean-right{{background:#fef2f2;color:#ef4444}}.as.right{{background:#fee2e2;color:#b91c1c}}
+.as.unknown{{background:#f8fafc;color:#94a3b8}}
+.alert{{border-radius:8px;padding:.8rem 1rem;margin:.8rem 0;font-size:.8rem}}
 .alert-info{{background:#dbeafe;border:1px solid #3b82f6;color:#1e40af}}
-.ft{{text-align:center;padding:2rem;color:var(--mu);font-size:.72rem}}
-@media(max-width:600px){{.stats{{flex-direction:column}}.card-hd{{flex-direction:column}}}}
+.alert-warn{{background:#fef3c7;border:1px solid #f59e0b;color:#92400e}}
+.ft{{text-align:center;padding:2rem;color:var(--mu);font-size:.7rem}}
+@media(max-width:600px){{.stats{{flex-direction:column}}.ch{{flex-direction:column}}}}
 </style>
 </head>
 <body>
 <div class="hd"><div class="w">
-<h1>📊 Ground News · Media Bias Dashboard</h1>
-<p>{now} · {len(entries)} articles · {len(all_sources)} sources · {len(topic_clusters)} topics (TF-IDF semantic clustering)</p>
+<h1>📊 Ground News · Bias Dashboard</h1>
+<p>{now} · {len(entries)} articles · {len(all_src)} sources · {len(topics)} topics · TF-IDF clustering · 🆕 Trend tracking</p>
 </div></div>
 <div class="w">
 <div class="stats">
 <div class="sc"><div class="n">{len(entries)}</div><div class="l">Articles</div></div>
-<div class="sc"><div class="n">{len(all_sources)}</div><div class="l">Sources</div></div>
-<div class="sc"><div class="n">{len(topic_clusters)}</div><div class="l">Topics</div></div>
-<div class="sc"><div class="n">{len(rated)}</div><div class="l">Bias-Rated</div></div>
+<div class="sc"><div class="n">{len(all_src)}</div><div class="l">Sources</div></div>
+<div class="sc"><div class="n">{len(topics)}</div><div class="l">Topics</div></div>
+<div class="sc"><div class="n">{len(rated)}</div><div class="l">Rated</div></div>
 </div>
-<div class="bar-wrap">
-<h3>📐 Overall Coverage Bias</h3>
-{build_bias_bar(all_left, all_center, all_right)}
-<div class="leg">
-<span><span class="dot dL"></span>Left ({all_left})</span>
-<span><span class="dot dC"></span>Center ({all_center})</span>
-<span><span class="dot dR"></span>Right ({all_right})</span>
+<div class="bw">
+<h3>📐 Overall Bias</h3>
+{bias_bar(al,ac,ar)}
+<div class="leg"><span><span class="d dL"></span>Left ({al})</span><span><span class="d dC"></span>Center ({ac})</span><span><span class="d dR"></span>Right ({ar})</span></div>
 </div>
-</div>
-<div class="alert alert-info">
-<strong>🧠 Method:</strong> TF-IDF vectorization + cosine similarity clustering.{' '}
-Articles with similar word patterns are grouped into topics automatically.{' '}
-Each topic card shows <em>which sources</em> from <em>which bias</em> cover the story.
-<span style="color:var(--mu);font-size:.75rem"><br>
-Bias data: AllSides · Next upgrade: sentence-transformers embeddings + HDBSCAN density clustering</span>
-</div>
-<div class="alert alert-warn">
-<strong>⚠ {singles} articles</strong> couldn't be clustered into topics (unique/isolated coverage).
-</div>
+{trend_summary}
+<div class="alert alert-info"><strong>🧠 Method:</strong> TF-IDF semantic clustering · 🔥NEW/📈rising from COS prev run · Source bias: AllSides · Blindspot: &lt;15% coverage</div>
+<div class="alert alert-warn"><strong>⚠ {singles} articles</strong> unclustered (unique/isolated coverage).</div>
 <h2 style="margin-top:1.5rem;font-size:1.1rem">🗂 Topics</h2>
 {topic_cards}
 </div>
 <div class="ft">
-<p>Ground News Pipeline v3 — TF-IDF semantic clustering · Auto-deployed to Cloudflare Pages</p>
-<p>Upcoming: HDBSCAN + sentence-transformers · Factuality scores · Media ownership tracking</p>
+<p>Ground News v4 — TF-IDF clustering + Cross-run trend tracking · Auto-deployed to Cloudflare Pages</p>
+<p>Next: sentence-transformers embeddings · HDBSCAN · factuality scores</p>
 </div>
-</body>
-</html>"""
+</body></html>"""
     return html
 
-
 def main():
-    html = generate_html()
-    p = Path("output/ground_news/index.html")
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(html, encoding="utf-8")
-    print(f"✅ HTML v3: {p} ({len(html)} chars)")
+    html=generate_html()
+    p=Path("output/ground_news/index.html")
+    p.parent.mkdir(parents=True,exist_ok=True)
+    p.write_text(html,encoding="utf-8")
+    print(f"✅ HTML v4: {p} ({len(html)} chars)")
 
-
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
