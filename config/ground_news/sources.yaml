@@ -1,9 +1,8 @@
-# Ground News 源清单 — v5：50 个全球主流媒体 RSS
-# 分类：world / tech / finance / china / asia / science
-# 注释 ⚪ = GitHub Actions 可能不通（IP 限制），本地/自建 RSSHub 可用
+# Ground News 源清单 — v6：70+ 全球媒体，支持 self-hosted CF Worker 代理
+# 分类：world / china / tech / finance / asia / europe / middle_east / africa / science / opinion
 
 rss_feeds:
-  # ===== 国际主流（12 个，全部已验证可用）=====
+  # ===== 国际主流（15 个）=====
   - {id: bbc, name: BBC World, url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: world, bias: center, language: en}
   - {id: nyt, name: NYTimes World, url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml", category: world, bias: lean-left, language: en}
   - {id: wapo, name: Washington Post, url: "https://feeds.washingtonpost.com/rss/world", category: world, bias: lean-left, language: en}
@@ -11,25 +10,26 @@ rss_feeds:
   - {id: economist, name: The Economist, url: "https://www.economist.com/international/rss.xml", category: world, bias: center, language: en}
   - {id: ft, name: Financial Times, url: "https://www.ft.com/rss/world", category: world, bias: center, language: en}
   - {id: cnn, name: CNN World, url: "http://rss.cnn.com/rss/edition_world.rss", category: world, bias: lean-left, language: en}
-  - {id: scmp, name: SCMP Asia, url: "https://www.scmp.com/rss/91/feed", category: asia, bias: center, language: en}
-  - {id: aljazeera, name: Al Jazeera, url: "https://www.aljazeera.com/xml/rss/all.xml", category: world, bias: lean-left, language: en}
-  - {id: wsj_world, name: WSJ World, url: "https://feeds.wsj.com/xml/rss/3_7085.xml", category: world, bias: lean-right, language: en}
   - {id: npr, name: NPR World, url: "https://feeds.npr.org/1004/rss.xml", category: world, bias: center, language: en}
-  - {id: reuters_world, name: Reuters World, url: "https://www.reuters.com/world/rss", category: world, bias: center, language: en}
+  - {id: dw, name: Deutsche Welle, url: "https://rss.dw.com/rdf/rss-en-all", category: world, bias: center, language: en}
+  - {id: france24, name: France 24, url: "https://www.france24.com/en/rss", category: world, bias: center, language: en}
+  - {id: euronews, name: Euronews, url: "https://www.euronews.com/rss", category: world, bias: center, language: en}
+  - {id: spiegel, name: Der Spiegel, url: "https://www.spiegel.de/international/index.rss", category: world, bias: lean-left, language: en}
+  - {id: aljazeera, name: Al Jazeera, url: "https://www.aljazeera.com/xml/rss/all.xml", category: world, bias: lean-left, language: en}
+  - {id: ap, name: AP News, url: "https://www.apnews.com/apf-topnews", category: world, bias: center, language: en}
+  - {id: reuters, name: Reuters Top, url: "https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1TVVSMFF5MUtGelFsTkNBU0FQAQ", category: world, bias: center, language: en}
 
-  # ===== 中文源（RSSHub Worker 代理 — 共 10 个）=====
+  # ===== 中文源（RSSHub Worker 代理 — 5 个已验证活 + 3 个新路由）=====
   - {id: people_cn, name: 人民网, url: "http://www.people.com.cn/rss/politics.xml", category: china, bias: lean-left, language: zh}
   - {id: ithome, name: IT之家, url: "https://www.ithome.com/rss/", category: tech, bias: center, language: zh}
-  - {id: xinhua, name: 新华社, url: "https://rsshub-proxy-01.z20178zz.workers.dev/xinhua/news", category: china, bias: lean-left, language: zh}
   - {id: caixin, name: 财新网, url: "https://rsshub-proxy-01.z20178zz.workers.dev/caixin/latest", category: china, bias: center, language: zh}
   - {id: thepaper, name: 澎湃新闻, url: "https://rsshub-proxy-01.z20178zz.workers.dev/thepaper/featured", category: china, bias: lean-left, language: zh}
-  - {id: jiemian, name: 界面新闻, url: "https://rsshub-proxy-01.z20178zz.workers.dev/jiemian/latest", category: finance, bias: center, language: zh}
-  - {id: cls, name: 财联社, url: "https://rsshub-proxy-01.z20178zz.workers.dev/cls/telegraph", category: finance, bias: center, language: zh}
   - {id: huxiu, name: 虎嗅网, url: "https://rsshub-proxy-01.z20178zz.workers.dev/huxiu/article", category: tech, bias: center, language: zh}
-  - {id: wallstreetcn, name: 华尔街见闻, url: "https://rsshub-proxy-01.z20178zz.workers.dev/wallstreetcn/hot/1", category: finance, bias: center, language: zh}
-  - {id: 36kr, name: 36氪, url: "https://rsshub-proxy-01.z20178zz.workers.dev/36kr/motif/221982", category: tech, bias: center, language: zh}
+  - {id: weibo, name: 微博热搜, url: "https://rsshub-proxy-01.z20178zz.workers.dev/weibo/hot/1", category: china, bias: center, language: zh}
+  - {id: zhihu, name: 知乎热榜, url: "https://rsshub-proxy-01.z20178zz.workers.dev/zhihu/hotlist", category: china, bias: center, language: zh}
+  - {id: douban, name: 豆瓣, url: "https://rsshub-proxy-01.z20178zz.workers.dev/douban/doulist/3774643", category: china, bias: center, language: zh}
 
-  # ===== 科技源（10 个）=====
+  # ===== 科技源（12 个）=====
   - {id: techcrunch, name: TechCrunch, url: "https://techcrunch.com/feed/", category: tech, bias: center, language: en}
   - {id: mit_tr, name: MIT Tech Review, url: "https://www.technologyreview.com/feed/", category: tech, bias: center, language: en}
   - {id: hn, name: Hacker News, url: "https://hnrss.org/frontpage", category: tech, bias: center, language: en}
@@ -38,42 +38,64 @@ rss_feeds:
   - {id: wired, name: Wired, url: "https://www.wired.com/feed/rss", category: tech, bias: lean-left, language: en}
   - {id: zdnet, name: ZDNet, url: "https://www.zdnet.com/news/rss.xml", category: tech, bias: center, language: en}
   - {id: engadget, name: Engadget, url: "https://www.engadget.com/rss.xml", category: tech, bias: center, language: en}
-  - {id: gizmodo, name: Gizmodo, url: "https://gizmodo.com/rss", category: tech, bias: lean-left, language: en}
   - {id: theregister, name: The Register, url: "https://www.theregister.com/headlines.atom", category: tech, bias: center, language: en}
+  - {id: new_sci, name: New Scientist, url: "https://www.newscientist.com/feed/", category: science, bias: center, language: en}
+  - {id: live_sci, name: Live Science, url: "https://www.livescience.com/feeds/all", category: science, bias: center, language: en}
+  - {id: space, name: Space.com, url: "https://www.space.com/feeds/all", category: science, bias: center, language: en}
 
-  # ===== 财经源（6 个）=====
+  # ===== 财经源（8 个）=====
   - {id: bloomberg, name: Bloomberg, url: "https://feeds.bloomberg.com/markets/news.rss", category: finance, bias: center, language: en}
   - {id: cnbc, name: CNBC Top News, url: "https://www.cnbc.com/id/100003114/device/rss/rss.html", category: finance, bias: center, language: en}
   - {id: marketwatch, name: MarketWatch, url: "https://feeds.marketwatch.com/marketwatch/topstories", category: finance, bias: center, language: en}
   - {id: businessinsider, name: Business Insider, url: "https://markets.businessinsider.com/rss/news", category: finance, bias: center, language: en}
   - {id: forbes, name: Forbes, url: "https://www.forbes.com/most-popular/feed/", category: finance, bias: center, language: en}
   - {id: fortune, name: Fortune, url: "https://fortune.com/feed", category: finance, bias: center, language: en}
+  - {id: wsj_market, name: WSJ Markets, url: "https://feeds.wsj.com/xml/rss/3_7031.xml", category: finance, bias: lean-right, language: en}
+  - {id: barrons, name: Barrons, url: "https://www.barrons.com/feed", category: finance, bias: center, language: en}
 
-  # ===== 亚太源（6 个）=====
+  # ===== 亚太源（8 个）=====
+  - {id: scmp, name: SCMP Asia, url: "https://www.scmp.com/rss/91/feed", category: asia, bias: center, language: en}
   - {id: nikkei, name: Nikkei Asia, url: "https://asia.nikkei.com/rss/feed/nar", category: asia, bias: center, language: en}
   - {id: straitstimes, name: Straits Times, url: "https://www.straitstimes.com/news/asia/rss.xml", category: asia, bias: center, language: en}
   - {id: timesofindia, name: Times of India, url: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms", category: asia, bias: center, language: en}
   - {id: japantimes, name: Japan Times, url: "https://www.japantimes.co.jp/feed/topstories/", category: asia, bias: center, language: en}
-  - {id: koreaherald, name: Korea Herald, url: "http://www.koreaherald.com/rss_xml.php", category: asia, bias: center, language: en}
   - {id: abc_au, name: ABC Australia, url: "https://www.abc.net.au/news/feed/51120/rss.xml", category: asia, bias: center, language: en}
+  - {id: thehindu, name: The Hindu, url: "https://www.thehindu.com/news/national/feeder/default.rss", category: asia, bias: center, language: en}
+  - {id: bangkokpost, name: Bangkok Post, url: "https://www.bangkokpost.com/rss/data/topstories.xml", category: asia, bias: center, language: en}
 
   # ===== 欧洲源（4 个）=====
-  - {id: dw, name: Deutsche Welle, url: "https://rss.dw.com/rdf/rss-en-all", category: world, bias: center, language: en}
-  - {id: france24, name: France 24, url: "https://www.france24.com/en/rss", category: world, bias: center, language: en}
-  - {id: euronews, name: Euronews, url: "https://www.euronews.com/rss", category: world, bias: center, language: en}
-  - {id: spiegel, name: Der Spiegel, url: "https://www.spiegel.de/international/index.rss", category: world, bias: lean-left, language: en}
+  - {id: bbc_europe, name: BBC Europe, url: "https://feeds.bbci.co.uk/news/world/europe/rss.xml", category: europe, bias: center, language: en}
+  - {id: lefigaro, name: Le Figaro, url: "https://www.lefigaro.fr/rss/figaro_actualites.xml", category: europe, bias: lean-right, language: fr}
+  - {id: elpais, name: El Pais, url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada", category: europe, bias: lean-left, language: es}
+  - {id: thelocal, name: The Local EU, url: "https://www.thelocal.com/feeds/", category: europe, bias: center, language: en}
 
-  # ===== 科学/环境源（4 个）=====
-  - {id: sciam, name: Scientific American, url: "https://www.scientificamerican.com/feed/", category: science, bias: center, language: en}
-  - {id: newscientist, name: New Scientist, url: "https://www.newscientist.com/feed/", category: science, bias: center, language: en}
-  - {id: natgeo, name: National Geographic, url: "https://www.nationalgeographic.com/feed/", category: science, bias: center, language: en}
-  - {id: livescience, name: Live Science, url: "https://www.livescience.com/feeds/all", category: science, bias: center, language: en}
+  # ===== 中东源（4 个）=====
+  - {id: alarabiya, name: Al Arabiya, url: "https://www.alarabiya.net/rss/feed.xml", category: middle_east, bias: center, language: en}
+  - {id: haaretz, name: Haaretz, url: "https://www.haaretz.com/srv/htz-services/rss", category: middle_east, bias: lean-left, language: en}
+  - {id: jerusalem_post, name: Jerusalem Post, url: "https://www.jpost.com/rss/rssfeedsfrontpage.aspx", category: middle_east, bias: lean-right, language: en}
+  - {id: middleeasteye, name: Middle East Eye, url: "https://www.middleeasteye.net/rss/top-stories", category: middle_east, bias: center, language: en}
 
-# agent-reach 搜索（Exa API + B站）
+  # ===== 非洲源（3 个）=====
+  - {id: mg_africa, name: Mail & Guardian Africa, url: "https://mg.co.za/feed/", category: africa, bias: center, language: en}
+  - {id: allafrica, name: AllAfrica, url: "https://allafrica.com/tools/headlines/rss/mostread.xml", category: africa, bias: center, language: en}
+  - {id: africanews, name: Africanews, url: "https://www.africanews.com/feed/rss", category: africa, bias: center, language: en}
+
+  # ===== 拉美源（3 个）=====
+  - {id: folha, name: Folha de S.Paulo, url: "https://feeds.folha.uol.com.br/emcimadahora/rss091.xml", category: world, bias: center, language: pt}
+  - {id: clarin, name: Clarin, url: "https://www.clarin.com/rss/lo-ultimo/", category: world, bias: center, language: es}
+  - {id: eluniversal, name: El Universal, url: "https://www.eluniversal.com.mx/rss/portada.xml", category: world, bias: center, language: es}
+
+  # ===== 观点/分析源（4 个）=====
+  - {id: atlantic, name: The Atlantic, url: "https://www.theatlantic.com/feed/all/", category: opinion, bias: lean-left, language: en}
+  - {id: newyorker, name: The New Yorker, url: "https://www.newyorker.com/feed/everything", category: opinion, bias: lean-left, language: en}
+  - {id: politico, name: Politico, url: "https://rss.politico.com/politics-news.xml", category: opinion, bias: center, language: en}
+  - {id: axios, name: Axios, url: "https://api.axios.com/feed/", category: opinion, bias: center, language: en}
+
+# agent-reach 搜索
 agent_reach:
   enabled: true
   platforms:
-    - {name: exa_search, type: web, queries: ["今日热点新闻", "AI artificial intelligence latest news", "中美关系 latest", "全球财经重要新闻", "科技突破 discovery"]}
+    - {name: exa_search, type: web, queries: ["今日热点新闻", "AI artificial intelligence latest news", "中美关系 latest", "全球财经重要新闻", "科技突破 discovery", "中东冲突 middle east", "气候 change climate", "全球健康 pandemic"]}
     - {name: bilibili, type: social, command: "bili search '{query}' --type video -n 5", queries: ["今日热点", "AI 人工智能"]}
   max_per_query: 10
   timeout_seconds: 60
