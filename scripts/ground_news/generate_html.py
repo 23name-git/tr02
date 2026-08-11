@@ -183,6 +183,7 @@ def generate_html() -> str:
         total_rated = left_n + center_n + right_n
 
         # 盲点检测（<15% 覆盖率即标）
+        blindspot = ""
         if total_rated >= 3:
             left_pct = left_n / total_rated * 100 if total_rated else 0
             right_pct = right_n / total_rated * 100 if total_rated else 0

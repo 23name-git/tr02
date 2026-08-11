@@ -58,10 +58,18 @@ rss_feeds:
     bias_reference: people.com.cn
     language: zh
 
-  # 36氪 - 用 news feed
-  - id: 36kr_news
+  # IT之家（科技中文）
+  - id: ithome
+    name: IT之家
+    url: https://www.ithome.com/rss/
+    category: tech
+    bias_reference: ithome.com
+    language: zh
+
+  # 36氪 - 替换为可用 feed
+  - id: 36kr_alt
     name: 36氪
-    url: https://36kr.com/feed
+    url: https://rsshub.app/36kr/motif/221982
     category: tech
     bias_reference: 36kr.com
     language: zh
@@ -124,26 +132,12 @@ rss_feeds:
     bias_reference: aljazeera.com
     language: en
 
-  # ===== 修复死源：替换为可用源 =====
-  - id: reuters_top
-    name: Reuters Top News
-    url: https://rss.app/feeds/369DcrN6EtnDxFqW.xml
-    category: world
-    bias_reference: reuters.com
-    language: en
-
-  - id: ap_top
-    name: AP Top News
-    url: https://rss.app/feeds/Lw0sRSL3gTPmm8AZ.xml
-    category: world
-    bias_reference: apnews.com
-    language: en
-
-  - id: ithome
-    name: IT之家
-    url: https://www.ithome.com/rss/
+  # ===== 修复死源 =====
+  - id: 36kr_alt
+    name: 36氪
+    url: https://rsshub.app/36kr/motif/221982
     category: tech
-    bias_reference: ithome.com
+    bias_reference: 36kr.com
     language: zh
 
 # agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
