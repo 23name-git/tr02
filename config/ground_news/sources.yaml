@@ -124,19 +124,27 @@ rss_feeds:
     bias_reference: aljazeera.com
     language: en
 
-  - id: reuters_world
-    name: Reuters World
-    url: https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best
+  # ===== 修复死源：替换为可用源 =====
+  - id: reuters_top
+    name: Reuters Top News
+    url: https://rss.app/feeds/369DcrN6EtnDxFqW.xml
     category: world
     bias_reference: reuters.com
     language: en
 
-  - id: ap_news
-    name: Associated Press
-    url: https://www.mysanantonio.com/rss/feed/AP-Top-News-550.php
+  - id: ap_top
+    name: AP Top News
+    url: https://rss.app/feeds/Lw0sRSL3gTPmm8AZ.xml
     category: world
     bias_reference: apnews.com
     language: en
+
+  - id: ithome
+    name: IT之家
+    url: https://www.ithome.com/rss/
+    category: tech
+    bias_reference: ithome.com
+    language: zh
 
 # agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
 agent_reach:

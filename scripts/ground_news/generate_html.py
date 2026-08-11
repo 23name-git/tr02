@@ -23,8 +23,8 @@ CONFIG_DIR = Path("config/ground_news")
 
 # ===================== 向量聚类引擎 =====================
 
-def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.25) -> Dict[str, List[Dict]]:
-    """TF-IDF 向量化 + cosine similarity 聚类"""
+def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.12) -> Dict[str, List[Dict]]:
+    """TF-IDF + cosine similarity 聚类（阈值 0.12，比 0.25 更宽松）"""
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
 
@@ -32,7 +32,18 @@ def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.
     if len(titles) < 2:
         return {"All News": entries}
 
-    vectorizer = TfidfVectorizer(stop_words="english", max_features=500)
+    # 中英文混合停用词
+    zh_stop = set("的了吗呢嘛哦啊嗯吧呀在和有是我他这不也人了就到说要去能为都个中上大对会可以自后下没看好只还过")
+    en_stop = {"the","a","an","is","are","was","were","be","been","in","on","at","to","for","of","and","or","but",
+               "it","its","that","this","with","from","by","as","not","no","has","have","had","will","would","can",
+               "could","may","should","new","more","says","after","over","into","first","than","just","about","what"}
+    all_stop = list(zh_stop | en_stop)
+
+    vectorizer = TfidfVectorizer(
+        stop_words=all_stop,
+        max_features=800,
+        ngram_range=(1, 2),  # unigrams + bigrams
+    )
     try:
         tfidf_matrix = vectorizer.fit_transform(titles)
         sim_matrix = cosine_similarity(tfidf_matrix)
@@ -53,23 +64,19 @@ def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.
             if not assigned[j] and sim_matrix[i][j] >= similarity_threshold:
                 cluster.append(j)
                 assigned[j] = True
-        clusters[len(clusters)] = cluster
+        if len(cluster) >= 2:  # 至少要2篇才算一个簇
+            clusters[len(clusters)] = cluster
 
-    # 命名聚类（取出现最多的词）
+    # 命名
     feature_names = vectorizer.get_feature_names_out()
     result = {}
     for cid, indices in clusters.items():
-        # 提取关键词
-        cluster_titles = [titles[i] for i in indices]
-        # 用 TF-IDF 均值找 top 词
         centroid = np.mean(tfidf_matrix[indices].toarray(), axis=0)
         top_indices = np.argsort(centroid)[-5:][::-1]
-        keywords = [feature_names[k] for k in top_indices if centroid[k] > 0]
+        keywords = [feature_names[k] for k in top_indices if centroid[k] > 0.05]
         topic_name = " / ".join(keywords[:3]) if keywords else f"Topic {cid + 1}"
-
         result[topic_name] = [entries[i] for i in indices]
 
-    # 按簇大小排序
     return dict(sorted(result.items(), key=lambda x: -len(x[1])))
 
 
@@ -175,12 +182,13 @@ def generate_html() -> str:
         right_n = sum(1 for e in rated_t if e["_category"] == "right")
         total_rated = left_n + center_n + right_n
 
-        # 盲点
-        blindspot = ""
+        # 盲点检测（<15% 覆盖率即标）
         if total_rated >= 3:
-            if left_n == 0 and right_n > 0:
+            left_pct = left_n / total_rated * 100 if total_rated else 0
+            right_pct = right_n / total_rated * 100 if total_rated else 0
+            if left_pct < 15 and right_pct >= 15:
                 blindspot = '<span class="blindspot-tag">⚠ Left Blindspot</span>'
-            elif right_n == 0 and left_n > 0:
+            elif right_pct < 15 and left_pct >= 15:
                 blindspot = '<span class="blindspot-tag">⚠ Right Blindspot</span>'
 
         # 源标签
