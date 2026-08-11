@@ -124,27 +124,62 @@ rss_feeds:
     bias_reference: aljazeera.com
     language: en
 
-  # ===== 修复死源：3 个中文可用源代替 36kr =====
+  # ===== 中文源（RSSHub 路由 — 标准 XML，feedparser 直接可用）=====
   - id: chinanews
     name: 中国新闻网
-    url: https://www.chinanews.com.cn/rss/rss_2.html
+    url: https://rsshub.app/chinanews/scroll
     category: china
     bias_reference: chinanews.com
     language: zh
 
   - id: zaobao
     name: 联合早报
-    url: https://www.zaobao.com/news/china/story2
+    url: https://rsshub.app/zaobao/realtime/china
     category: asia
     bias_reference: zaobao.com
     language: zh
 
   - id: huanqiu
     name: 环球网
-    url: https://www.huanqiu.com/rss/latest.xml
+    url: https://rsshub.app/huanqiu/news
     category: china
     bias_reference: huanqiu.com
     language: zh
+
+  - id: caixin_latest
+    name: 财新网
+    url: https://rsshub.app/caixin/latest
+    category: finance
+    bias_reference: caixin.com
+    language: zh
+
+  - id: thepaper_hot
+    name: 澎湃新闻
+    url: https://rsshub.app/thepaper/featured
+    category: china
+    bias_reference: thepaper.cn
+    language: zh
+
+  - id: jiemian
+    name: 界面新闻
+    url: https://rsshub.app/jiemian/latest
+    category: finance
+    bias_reference: jiemian.com
+    language: zh
+
+  - id: reuters
+    name: Reuters
+    url: https://rsshub.app/reuters/world
+    category: world
+    bias_reference: reuters.com
+    language: en
+
+  - id: ap_news
+    name: Associated Press
+    url: https://rsshub.app/apnews/topics/apf-topnews
+    category: world
+    bias_reference: apnews.com
+    language: en
 
 # agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
 agent_reach:
