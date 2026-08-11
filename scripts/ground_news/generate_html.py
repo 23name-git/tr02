@@ -235,8 +235,10 @@ def generate_html()->str:
         rising_c=sum(1 for v in trends.values() if "rising" in v)
         trend_alert=f'<div class="alert"><span>🔄</span> vs Previous Run: <strong>{new_c}</strong> new topics · <strong>{rising_c}</strong> rising · <strong>{len(prev.get("entries",[]))}→{len(entries)}</strong> articles</div>'
 
-    singles=len(entries)-sum(len(v) for v in topics.values())
+    singles=sum(1 for v in topics.values() if len(v)<3)
+    clustered=len(entries)-singles
     method_alert=f'<div class="alert"><span>🧠</span> Method: sentence-transformers (all-MiniLM-L6-v2) semantic clustering · TF-IDF fallback · 🔥NEW/📈rising trend tracking · Source bias: AllSides</div>'
+    unclustered_alert=f'<div class="alert alert-warn"><span>📌</span> {singles} articles unclustered (min 3 per topic required) — {clustered} clustered into {len(topics)} topics</div>' if singles>0 else ""
 
     html=f'''<!DOCTYPE html>
 <html lang="en">
@@ -270,9 +272,10 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .dL{{background:var(--L)}}.dC{{background:var(--C)}}.dR{{background:var(--R)}}
 /* Alert */
 .alert{{background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:.7rem 1rem;margin:.8rem 0;font-size:.78rem;color:#1e40af;display:flex;align-items:center;gap:.5rem}}
+.alert-warn{{background:#fef3c7;border-color:#f59e0b;color:#92400e}}
 /* Layout */
 .main{{display:grid;grid-template-columns:1fr 280px;gap:1rem;margin:1rem 0}}
-@media(max-width:768px){{.hd{{padding:1.5rem 0 1rem}}.hd h1{{font-size:1.15rem}}.w{{padding:0 .8rem}}.main{{grid-template-columns:1fr!important}}.sidebar .bw{{position:static!important}}.stats{{grid-template-columns:repeat(3,1fr);gap:.4rem}}.sc{{padding:.6rem .5rem}}.sc .n{{font-size:1.2rem}}.card{{padding:.8rem}}.ch h3{{font-size:.82rem}}.bb{{height:20px}}.toolbar button{{padding:.3rem .6rem;font-size:.65rem}}.rr{{grid-template-columns:20px 50px 1fr 45px;font-size:.68rem}}.sr{{font-size:.7rem}}.ar a{{font-size:.74rem}}}}
+@media(max-width:768px){{body{{overflow-x:hidden}}.hd{{padding:1.5rem 0 1rem}}.hd h1{{font-size:1.1rem}}.w{{padding:0 .7rem;max-width:100%}}.main{{grid-template-columns:1fr!important}}.sidebar{{width:100%}}.sidebar .bw{{position:static!important;margin:.5rem 0;padding:.8rem}}.stats{{grid-template-columns:repeat(2,1fr);gap:.3rem}}.sc{{padding:.5rem .4rem}}.sc .n{{font-size:1.1rem}}.card{{padding:.7rem;border-left-width:2px}}.ch h3{{font-size:.78rem}}.bb{{height:18px}}.toolbar{{gap:.3rem}}.toolbar button{{padding:.25rem .5rem;font-size:.6rem}}.rr{{grid-template-columns:18px 44px 1fr 40px;font-size:.64rem}}.sr{{font-size:.68rem}}.ar{{font-size:.72rem}}.ar a{{font-size:.72rem;white-space:normal;word-break:break-word}}.cnt{{font-size:.62rem}}}}
 /* Sidebar */
 .sidebar h4{{font-size:.78rem;font-weight:700;margin-bottom:.6rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}}
 /* Search */
@@ -338,6 +341,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 </div>
 {trend_alert}
 {method_alert}
+{unclustered_alert}
 
 <div class="main">
 <div class="content">
