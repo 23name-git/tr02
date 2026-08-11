@@ -17,14 +17,17 @@ rss_feeds:
   - {id: npr, name: NPR World, url: "https://feeds.npr.org/1004/rss.xml", category: world, bias: center, language: en}
   - {id: reuters_world, name: Reuters World, url: "https://www.reuters.com/world/rss", category: world, bias: center, language: en}
 
-  # ===== 中文源（3 个已验证 + 5 个 RSSHub）=====
+  # ===== 中文源（RSSHub Worker 代理 — 共 10 个）=====
   - {id: people_cn, name: 人民网, url: "http://www.people.com.cn/rss/politics.xml", category: china, bias: lean-left, language: zh}
   - {id: ithome, name: IT之家, url: "https://www.ithome.com/rss/", category: tech, bias: center, language: zh}
-  - {id: xinhua, name: 新华社, url: "https://rsshub.pseudoyu.com/xinhua/news", category: china, bias: lean-left, language: zh}
-  - {id: caixin, name: 财新网, url: "https://rsshub.pseudoyu.com/caixin/latest", category: china, bias: center, language: zh}
-  - {id: thepaper, name: 澎湃新闻, url: "https://rsshub.pseudoyu.com/thepaper/featured", category: china, bias: lean-left, language: zh}
-  - {id: jiemian, name: 界面新闻, url: "https://rsshub.pseudoyu.com/jiemian/latest", category: finance, bias: center, language: zh}
-  - {id: cls, name: 财联社, url: "https://rsshub.pseudoyu.com/cls/telegraph", category: finance, bias: center, language: zh}
+  - {id: xinhua, name: 新华社, url: "https://rsshub-proxy.z20178zz.workers.dev/xinhua/news", category: china, bias: lean-left, language: zh}
+  - {id: caixin, name: 财新网, url: "https://rsshub-proxy.z20178zz.workers.dev/caixin/latest", category: china, bias: center, language: zh}
+  - {id: thepaper, name: 澎湃新闻, url: "https://rsshub-proxy.z20178zz.workers.dev/thepaper/featured", category: china, bias: lean-left, language: zh}
+  - {id: jiemian, name: 界面新闻, url: "https://rsshub-proxy.z20178zz.workers.dev/jiemian/latest", category: finance, bias: center, language: zh}
+  - {id: cls, name: 财联社, url: "https://rsshub-proxy.z20178zz.workers.dev/cls/telegraph", category: finance, bias: center, language: zh}
+  - {id: huxiu, name: 虎嗅网, url: "https://rsshub-proxy.z20178zz.workers.dev/huxiu/article", category: tech, bias: center, language: zh}
+  - {id: wallstreetcn, name: 华尔街见闻, url: "https://rsshub-proxy.z20178zz.workers.dev/wallstreetcn/hot/1", category: finance, bias: center, language: zh}
+  - {id: 36kr, name: 36氪, url: "https://rsshub-proxy.z20178zz.workers.dev/36kr/motif/221982", category: tech, bias: center, language: zh}
 
   # ===== 科技源（10 个）=====
   - {id: techcrunch, name: TechCrunch, url: "https://techcrunch.com/feed/", category: tech, bias: center, language: en}
