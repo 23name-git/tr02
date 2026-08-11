@@ -425,3 +425,167 @@
 申诉
 冒充
 
+# 2026 GitHub / 网络安全 / AI / 爬虫 / OSINT 综合关键词库 V1
+
+## 1. 违法犯罪与暴力事件
+
+/抢劫|纵火|放火|投毒|虐待|寻衅滋事|聚众斗殴|勒索|械斗|非法拘禁|越狱|潜逃|逃犯|枪支|弹药|涉黄|涉赌|网络赌博|电信诈骗|杀猪盘|刷单|组织卖淫|卖淫嫖娼|买卖器官|绑架|谋杀|故意伤害|持刀|持枪|爆炸|袭击|恐袭|恐怖袭击|绑架|人质|黑社会|犯罪团伙|黑客犯罪/ => 1违法犯罪与暴力事件
+
+## 2. 突发事故与自然灾害
+
+/踩踏|塌方|沉船|爆燃|燃气泄漏|毒气泄漏|触电|溺水|倾覆|坠崖|井喷|倒塌|缺氧|大火|溃坝|海啸|冰雹|霜冻|病虫害|森林火灾|地震|余震|泥石流|山体滑坡|洪水|暴雨|台风|飓风|龙卷风|暴雪|寒潮|高温|干旱|沙尘暴|火山喷发|雷击|雷暴|核泄漏|化学泄漏|工业事故|矿难|交通事故|飞机失事|列车事故|船舶事故/ => 2突发事故与自然灾害
+
+## 3. 维权纠纷与群体事件
+
+/讨薪|欠薪|烂尾|烂尾楼|跑路|撤资|破产|清算|断供|维权抗争|罢工|罢课|静坐|抗议|集会|上访|越级上访|退款难|提现困难|暴力拉条幅|维权拉横幅|劳动纠纷|劳资纠纷|合同纠纷|消费维权|业主维权|集体维权|群体事件|示威|游行|罢市|停工|欠款|拖欠工资|强拆|征地纠纷|物业纠纷|医患纠纷|教育纠纷|平台维权/ => 3维权纠纷与群体事件
+
+## 4. 商业风险与违纪腐败
+
+/受贿|行贿|洗钱|非法集资|传销|高利贷|内幕交易|职务侵占|挪用公款|偷税漏税|虚开发票|阴阳合同|财务造假|虚假宣传|抽检不合格|食安问题|食品安全|履约风险|违约|商业贿赂|利益输送|权钱交易|腐败|贪腐|审计|财务危机|资金链断裂|债务危机|经营异常|失信|破产重组|债务重组|裁员|大规模裁员|现金流危机|暴雷|爆雷|跑路|兑付危机|违约风险|监管处罚/ => 4商业风险与违纪腐败
+
+## 5. 网络舆情与违规处罚
+
+/谣言|造谣|传谣|辟谣|封杀|禁言|下架|约谈|行政处罚|官宣通报|曝光台|丑闻|黑幕|负面缠身|被查|被立案|限高|失信人|老赖|人肉搜索|隐私泄露|舆论|舆情|负面新闻|争议|争端|回应|道歉|声明|通报|处罚|整改|监管|封禁|账号封禁|内容审查|违规|违法违规|热搜|舆情危机|公关危机|品牌危机/ => 5网络舆情与违规处罚
+
+## 6. 网络安全漏洞
+
+/CVE|CWE|0day|0-day|Zero-Day|Nday|1day|漏洞|安全漏洞|高危漏洞|严重漏洞|Critical Vulnerability|High Severity|远程代码执行|RCE|Remote Code Execution|命令执行|Command Execution|代码执行|Code Execution|权限提升|提权|Privilege Escalation|越权|未授权访问|Unauthorized Access|认证绕过|Authentication Bypass|访问控制|任意文件读取|任意文件下载|任意文件上传|路径遍历|Path Traversal|目录穿越|Directory Traversal|SSRF|CSRF|XSS|SQL Injection|SQLi|XXE|SSTI|反序列化|Deserialization|原型链污染|Prototype Pollution|JNDI|LDAP Injection|命令注入|Command Injection|表达式注入|Expression Injection|内存破坏|Buffer Overflow|UAF|Use-After-Free|Double Free|整数溢出|Integer Overflow|Race Condition|竞态条件/ => 6网络安全漏洞
+
+## 7. 数据泄露与隐私
+
+/数据泄露|数据泄漏|Data Breach|Data Leak|信息泄露|敏感数据|敏感信息|个人信息泄露|隐私泄露|Privacy Leak|数据库泄露|Database Leak|数据库泄漏|用户数据泄露|账号泄露|密码泄露|凭证泄露|Credential Leak|Token泄露|API Key泄露|API Key|Secret泄露|Secret Exposure|Access Key|AWS Key|Azure Key|GitHub Token|SSH Key|Private Key|Cookie泄露|Session泄露|源码泄露|Source Code Leak|配置泄露|Config Leak|备份泄露|日志泄露|数据外泄|数据暴露|Exposed Database|公开数据库|未授权数据库|裸奔数据库|Doxxing|人肉搜索|PII|个人身份信息|身份证泄露|手机号泄露|邮箱泄露|密码库|Credential Dump/ => 7数据泄露与隐私
+
+## 8. 恶意软件
+
+/Malware|恶意软件|木马|Trojan|病毒|Virus|蠕虫|Worm|后门|Backdoor|Rootkit|RAT|Remote Access Trojan|远控木马|键盘记录|Keylogger|间谍软件|Spyware|信息窃取|Infostealer|窃密木马|Botnet|僵尸网络|Ransomware|勒索软件|Cryptojacking|挖矿木马|挖矿病毒|恶意代码|Malicious Code|恶意脚本|Malicious Script|Payload|Dropper|Loader|Downloader|Stealer|Banking Trojan|Banking Malware|Android Malware|iOS Malware|WebShell|Web Shell|C2|C&C|Command and Control|命令控制|恶意样本|恶意文件|恶意程序|恶意DLL|恶意宏|Macro Malware/ => 8恶意软件
+
+## 9. APT与黑客组织
+
+/APT|APT攻击|APT组织|Advanced Persistent Threat|高级持续性威胁|黑客组织|攻击组织|攻击团伙|威胁组织|Threat Actor|Threat Group|Cyber Gang|黑客团伙|攻击活动|Campaign|攻击行动|Intrusion|入侵行动|网络攻击|Cyber Attack|Cyber Espionage|网络间谍|间谍攻击|国家级黑客|国家背景黑客|Nation State|APT Campaign|APT Group|APT28|APT29|Lazarus|Fancy Bear|Cozy Bear|Sandworm|Equation Group|攻防行动|攻击基础设施|C2 Infrastructure|攻击链|Kill Chain|TTP|MITRE ATT&CK/ => 9APT与黑客组织
+
+## 10. Web安全与渗透测试
+
+/Web Security|网络安全|Web安全|渗透测试|Penetration Testing|Pentest|Pentesting|红队|Red Team|蓝队|Blue Team|紫队|Purple Team|漏洞扫描|安全扫描|资产扫描|端口扫描|Port Scan|指纹识别|Fingerprinting|信息收集|Recon|Reconnaissance|资产发现|Asset Discovery|攻击面|Attack Surface|暴露面|漏洞利用|Exploit|EXP|POC|Proof of Concept|Fuzzing|模糊测试|Brute Force|爆破|弱口令|Password Attack|WAF绕过|WAF Bypass|CDN绕过|Bypass|免杀|Evasion|沙箱逃逸|Sandbox Escape|权限维持|Persistence|横向移动|Lateral Movement|内网渗透|AD渗透|域渗透/ => 10Web安全与渗透测试
+
+## 11. GitHub与开源安全
+
+/GitHub|GitLab|Gitee|Git|Open Source|开源|开源项目|Repository|Repo|源码|Source Code|Commit|Pull Request|PR|Issue|Release|Fork|Star|Contributor|开发者|维护者|Dependency|依赖|依赖包|Package|Library|SDK|Software Supply Chain|软件供应链|供应链攻击|Supply Chain Attack|Dependency Confusion|依赖混淆|Typosquatting|抢注依赖|恶意依赖|恶意包|Malicious Package|恶意Repository|恶意仓库|Repo Hijacking|仓库接管|账号接管|GitHub Actions|GitHub Workflow|CI/CD|Workflow|Actions Injection|Actions漏洞|Secrets泄露|Dependabot|CodeQL|SBOM|SLSA|OpenSSF|Sigstore|Cosign/ => 11GitHub与开源安全
+
+## 12. AI与大模型
+
+/AI|人工智能|Artificial Intelligence|大模型|LLM|Large Language Model|生成式AI|Generative AI|AIGC|GenAI|基础模型|Foundation Model|多模态|Multimodal|VLM|Vision Language Model|AI模型|模型安全|AI Security|LLM Security|AI攻击|AI漏洞|AI安全|AI红队|AI Red Team|模型投毒|Model Poisoning|数据投毒|Data Poisoning|模型窃取|Model Theft|模型反演|Model Inversion|模型泄露|模型攻击|Prompt Injection|提示词注入|Jailbreak|越狱|System Prompt|系统提示词|上下文泄露|Context Leakage|AI诈骗|AI生成恶意代码|AI Malware|Deepfake|深度伪造|AI Agent|AI智能体/ => 12AI与大模型
+
+## 13. AI模型与训练
+
+/DeepSeek|Qwen|通义千问|Llama|Meta Llama|Mistral|Gemma|GLM|ChatGLM|Kimi|MiniMax|Claude|GPT|Gemini|Grok|ERNIE|文心一言|豆包|Doubao|Seed|InternLM|书生浦语|Yi|零一万物|Hunyuan|混元|Pangu|盘古|开源模型|Open Model|开源大模型|Reasoning Model|推理模型|Thinking Model|视觉模型|Vision Model|语音模型|Speech Model|ASR|TTS|Embedding|Embedding Model|模型量化|Quantization|GGUF|GPTQ|AWQ|LoRA|QLoRA|Fine-tuning|微调|Distillation|蒸馏|RLHF|DPO|SFT|预训练|Pretraining|Inference|推理部署/ => 13AI模型与训练
+
+## 14. AI Agent与自动化
+
+/AI Agent|Agent|AI智能体|智能体|Autonomous Agent|Agentic AI|Multi-Agent|多智能体|Subagent|子代理|Tool Use|工具调用|Function Calling|Tool Calling|Computer Use|Computer Agent|Browser Agent|Coding Agent|代码智能体|Research Agent|研究Agent|Deep Research|自动化Agent|Agent Workflow|工作流|Workflow|任务编排|Orchestration|Agent Memory|Agent记忆|长期记忆|短期记忆|知识库|Knowledge Base|AI自动化|自动执行|MCP|Model Context Protocol|MCP Server|MCP Client|CrewAI|AutoGen|LangGraph|LangChain|OpenClaw|Hermes|Codex|Claude Code|Cursor|Cline|Roo Code|OpenHands|Agent-Reach/ => 14AI Agent与自动化
+
+## 15. AI安全
+
+/AI Security|AI安全|LLM Security|大模型安全|模型安全|AI Red Team|AI红队|AI攻击|AI漏洞|Prompt Injection|提示词注入|Indirect Prompt Injection|间接提示词注入|Jailbreak|越狱|Prompt Leakage|提示词泄露|System Prompt Leakage|系统提示词泄露|Data Poisoning|数据投毒|Model Poisoning|模型投毒|Model Extraction|模型提取|Model Theft|模型窃取|Model Inversion|模型反演|Membership Inference|成员推断|Adversarial Attack|对抗攻击|Adversarial Example|对抗样本|AI Supply Chain|AI供应链|RAG Security|RAG安全|Agent Security|Agent安全|MCP Security|MCP安全|Tool Poisoning|工具投毒|Context Poisoning|上下文投毒|AI Privacy|AI隐私|AI Red Teaming/ => 15AI安全
+
+## 16. 爬虫与数据采集
+
+/爬虫|网络爬虫|Web Scraping|Web Crawler|Crawler|Spider|Scraper|数据采集|网页采集|信息采集|数据抓取|网页抓取|采集器|爬取|抓取|反爬|反爬虫|Anti-Bot|Bot Detection|验证码|CAPTCHA|滑块验证码|JS Challenge|JavaScript Challenge|指纹检测|浏览器指纹|Browser Fingerprint|设备指纹|Device Fingerprint|IP封禁|IP Block|IP池|IP Pool|代理池|Proxy Pool|住宅代理|Residential Proxy|动态IP|Rotating Proxy|User-Agent|Cookie|Session|Playwright|Puppeteer|Selenium|Scrapy|Requests|BeautifulSoup|Crawlee|MediaCrawler|DrissionPage|SeleniumBase|Headless Browser|无头浏览器|Browser Automation/ => 16爬虫与数据采集
+
+## 17. 反爬与Bot防护
+
+/反爬|反爬虫|Anti-Crawler|Anti-Bot|Bot Detection|Bot Protection|Bot Management|验证码|CAPTCHA|reCAPTCHA|Turnstile|Cloudflare Challenge|JS Challenge|浏览器验证|滑块|行为检测|Behavior Detection|设备指纹|浏览器指纹|Fingerprint|TLS Fingerprint|JA3|JA4|IP Reputation|IP信誉|IP封禁|IP黑名单|Rate Limit|限流|请求频率|请求签名|动态Token|动态参数|加密参数|混淆参数|接口签名|WAF|Bot Wall|Human Verification|Headless Detection|Automation Detection|反自动化|Anti Automation/ => 17反爬与Bot防护
+
+## 18. 社交媒体与舆情
+
+/社交媒体|Social Media|Social Network|微博|微信|微信公众号|抖音|快手|小红书|B站|知乎|Telegram|Discord|Reddit|X|Twitter|Facebook|Instagram|TikTok|YouTube|论坛|社区|贴吧|评论|帖子|Post|Tweet|转发|点赞|传播|扩散|病毒式传播|Trending|Trend|热搜|热点|话题|Hashtag|标签|情绪分析|Sentiment Analysis|舆情分析|舆情监测|关键词监控|实时监控|舆情预警|信息预警|传播链|Influencer|KOL|网红|账号矩阵/ => 18社交媒体与舆情
+
+## 19. OSINT开源情报
+
+/OSINT|Open Source Intelligence|开源情报|网络情报|情报分析|威胁情报|Threat Intelligence|Cyber Threat Intelligence|CTI|IOC|IOA|TTP|MITRE ATT&CK|攻击情报|威胁分析|Threat Analysis|威胁狩猎|Threat Hunting|情报源|Intelligence Source|数据源|情报平台|信息收集|Reconnaissance|目标画像|人物画像|组织画像|关系图谱|Knowledge Graph|Entity Resolution|实体识别|Geolocation|地理定位|卫星图像|卫星情报|GEOINT|SIGINT|SOCMINT|HUMINT|Dark Web|暗网|深网|泄露论坛|Paste|Pastebin|域名情报|WHOIS|DNS Intelligence|IP Intelligence|Certificate Transparency|证书透明度/ => 19OSINT开源情报
+
+## 20. 网络空间测绘
+
+/Shodan|Censys|FOFA|ZoomEye|Hunter|鹰图|Quake|网络空间测绘|Cyberspace Mapping|互联网资产|Internet Asset|资产测绘|资产发现|Asset Discovery|Attack Surface|攻击面|暴露面|公网资产|暴露资产|IP资产|域名资产|端口资产|服务资产|Banner|服务指纹|设备指纹|协议指纹|端口扫描|Port Scan|Host Discovery|主机发现|Internet Exposure|暴露服务|开放端口|Open Port|公网服务|Shadow IT/ => 20网络空间测绘
+
+## 21. 网络基础设施
+
+/IP地址|IPv4|IPv6|IP Address|域名|Domain|子域名|Subdomain|DNS|CDN|服务器|Server|主机|Host|VPS|云主机|端口|Port|开放端口|Open Port|服务|Service|Banner|指纹|Fingerprint|资产|Asset|互联网资产|攻击面|Attack Surface|公网资产|Public Asset|证书|Certificate|SSL|TLS|HTTPS|HTTP|SSH|RDP|FTP|SFTP|SMB|LDAP|Kerberos|SMTP|DNS|DHCP|NTP|SNMP|Telnet|VPN|Proxy|Reverse Proxy|Load Balancer/ => 21网络基础设施
+
+## 22. 云安全
+
+/AWS|Amazon Web Services|Azure|Microsoft Azure|GCP|Google Cloud|阿里云|Alibaba Cloud|腾讯云|Tencent Cloud|华为云|Huawei Cloud|火山引擎|Cloud Security|云安全|Cloud Native|云原生|IAM|Identity and Access Management|权限管理|Access Key|Secret Key|S3|S3 Bucket|Bucket|存储桶|Bucket Exposure|Bucket Leak|云数据库|Serverless|Lambda|Cloud Function|CloudTrail|CloudWatch|KMS|Key Management|云配置错误|Cloud Misconfiguration|Public Bucket|Public Access|云权限提升|Cloud Privilege Escalation|Metadata Service|Cloud Metadata|169.254.169.254|SSRF Cloud|云资产|云攻击面/ => 22云安全
+
+## 23. Docker与容器安全
+
+/Docker|Container|容器|Docker Image|容器镜像|Image Registry|镜像仓库|Docker Hub|Registry|镜像漏洞|Image Vulnerability|镜像投毒|恶意镜像|Malicious Image|Container Security|容器安全|Container Escape|容器逃逸|Container Breakout|Docker Socket|Docker API|docker.sock|Privileged Container|特权容器|Root Container|容器Root|容器权限|Namespace|Cgroup|Seccomp|AppArmor|Capability|容器扫描|Trivy|Grype|Syft|SBOM|软件物料清单|Supply Chain|Container Supply Chain|Runtime Security|容器运行时安全|Kata Containers|gVisor|Falco/ => 23Docker与容器安全
+
+## 24. Kubernetes与云原生
+
+/Kubernetes|K8s|Kubernetes Security|K8s Security|Pod|Deployment|Service|Ingress|ConfigMap|Secret|ServiceAccount|RBAC|Role|ClusterRole|API Server|kubelet|etcd|Helm|Operator|CRD|Admission Controller|Webhook|NetworkPolicy|CNI|CSI|Service Mesh|Istio|Envoy|ArgoCD|Flux|GitOps|Kubernetes Escape|K8s逃逸|K8s提权|K8s漏洞|Kubernetes Vulnerability|Cluster Takeover|集群接管|Kubernetes Attack|云原生安全|Cloud Native Security|Falco|Kubescape|Kube-bench|Kube-hunter/ => 24Kubernetes与云原生
+
+## 25. 身份认证与账号安全
+
+/Authentication|身份认证|Authorization|授权|IAM|SSO|Single Sign-On|OAuth|OAuth2|OAuth 2.0|OIDC|OpenID Connect|SAML|JWT|JSON Web Token|Token|Access Token|Refresh Token|Session|Cookie|MFA|2FA|多因素认证|双因素认证|Passkey|WebAuthn|FIDO|FIDO2|密码|Password|弱密码|Weak Password|密码泄露|Credential|Credential Stuffing|撞库|账号接管|Account Takeover|ATO|暴力破解|Brute Force|Password Spraying|密码喷洒|Phishing|钓鱼|Spear Phishing|鱼叉式钓鱼|Social Engineering|社工/ => 25身份认证与账号安全
+
+## 26. POC与漏洞利用
+
+/POC|Proof of Concept|POC编写|EXP|Exploit|Exploit Code|ExploitDB|漏洞利用|漏洞复现|漏洞验证|漏洞分析|漏洞挖掘|漏洞研究|漏洞武器化|Weaponization|Exploit Chain|攻击链|利用链|RCE Chain|RCE链|Privilege Escalation|提权链|Bypass|绕过|WAF Bypass|认证绕过|沙箱逃逸|容器逃逸|K8s Escape|0day Exploit|0-day Exploit|Nday Exploit|CVE PoC|CVE Exploit|Nuclei Template|Nuclei模板|Xray POC|Xray插件|漏洞插件|Metasploit Module|Exploit Module|漏洞武器库|Exploit Kit/ => 26POC与漏洞利用
+
+## 27. 网络安全工具
+
+/Nmap|Masscan|RustScan|Naabu|httpx|Nuclei|Nuclei Templates|Xray|Burp Suite|Burp|OWASP ZAP|Metasploit|Cobalt Strike|Sliver|Mythic|Impacket|BloodHound|Mimikatz|Responder|CrackMapExec|NetExec|SQLMap|ffuf|Gobuster|Dirsearch|Amass|Subfinder|Assetfinder|Katana|Waybackurls|Gau|Gospider|Arjun|Dalfox|XSStrike|Semgrep|CodeQL|Trivy|Grype|Syft|Gitleaks|TruffleHog|Nikto|OpenVAS|Nessus|Wazuh|Suricata|Zeek|Volatility|Wireshark|YARA|Sigma/ => 27网络安全工具
+
+## 28. 代码安全与DevSecOps
+
+/DevSecOps|DevSecOps Security|代码安全|Code Security|Application Security|AppSec|SAST|DAST|IAST|RASP|静态分析|Static Analysis|动态分析|Dynamic Analysis|代码审计|Code Audit|Secure Coding|安全编码|代码扫描|Code Scanning|Secret Scanning|Secrets Detection|依赖扫描|Dependency Scanning|漏洞扫描|Security Scanner|CodeQL|Semgrep|SonarQube|Snyk|Checkmarx|Fortify|Veracode|Gitleaks|TruffleHog|Dependabot|Renovate|SBOM|SLSA|OpenSSF|软件供应链|CI/CD Security|Pipeline Security|GitHub Security|GitLab Security/ => 28代码安全与DevSecOps
+
+## 29. 软件供应链安全
+
+/Software Supply Chain|软件供应链|供应链安全|Supply Chain Security|Supply Chain Attack|供应链攻击|Dependency Confusion|依赖混淆|Dependency Hijacking|依赖劫持|Typosquatting|拼写抢注|Package Hijacking|包劫持|Malicious Package|恶意包|Malicious Dependency|恶意依赖|NPM Security|PyPI Security|Maven Security|RubyGems Security|NuGet Security|Crate Security|npm|PyPI|Maven|Gradle|NuGet|RubyGems|Cargo|Composer|Package Registry|软件包仓库|SBOM|SLSA|OpenSSF|Sigstore|Cosign|Artifact Signing|软件签名|Package Signing|Build Security|构建安全|CI/CD|Release Security/ => 29软件供应链安全
+
+## 30. GitHub热点与项目趋势
+
+/GitHub Trending|Trending|trending|热门项目|热门仓库|热门Repository|热门Repo|爆火|爆款|快速增长|高速增长|Star暴涨|Stars增长|Fork暴涨|Fork增长|新项目|新仓库|New Repository|New Project|刚发布|新发布|Open Source|开源|开源项目|New Release|Release|重大更新|Major Update|Breaking Change|v1.0|v2.0|v3.0|Beta|Alpha|Experimental|Production Ready|Stable|社区增长|Community Growth|Contributor增长|贡献者增长|Developer Tools|开发者工具|项目爆红/ => 30GitHub热点与项目趋势
+
+## 31. 编程语言与技术栈
+
+/Python|Java|JavaScript|TypeScript|Go|Golang|Rust|C|C++|C#|PHP|Ruby|Kotlin|Swift|Dart|Scala|R|Lua|Perl|Shell|Bash|PowerShell|Assembly|汇编|React|Vue|Angular|Next.js|Nuxt|Node.js|Deno|Bun|Django|Flask|FastAPI|Spring|Spring Boot|Laravel|ThinkPHP|Express|NestJS|Gin|Echo|Actix|Tokio|Nginx|Apache|Redis|MySQL|PostgreSQL|MongoDB|Elasticsearch|Kafka|RabbitMQ/ => 31编程语言与技术栈
+
+## 32. 数据库与数据安全
+
+/MySQL|PostgreSQL|SQLite|Oracle|SQL Server|MariaDB|MongoDB|Redis|Elasticsearch|Cassandra|CouchDB|Neo4j|InfluxDB|ClickHouse|数据库|Database|数据库安全|Database Security|数据库泄露|Database Leak|数据库暴露|Exposed Database|未授权访问|Unauthorized Access|弱密码|默认密码|数据库注入|SQL Injection|SQLi|NoSQL Injection|Redis未授权|MongoDB未授权|Elasticsearch暴露|Kibana暴露|数据库备份|Database Backup|数据脱敏|Data Masking|数据加密|Encryption|字段加密|访问控制|审计日志|Database Audit/ => 32数据库与数据安全
+
+## 33. API与接口安全
+
+/API|API Security|API安全|REST API|RESTful|GraphQL|gRPC|SOAP|Web API|接口安全|接口漏洞|API漏洞|API Abuse|API滥用|API攻击|API Gateway|网关|API Key|API Token|Access Token|JWT|OAuth|Rate Limit|限流|Broken Authentication|认证缺陷|Broken Authorization|授权缺陷|BOLA|IDOR|越权|对象级授权|Mass Assignment|批量赋值|API Injection|API注入|API Enumeration|接口枚举|Shadow API|僵尸API|API Discovery|接口发现|API Exposure|接口暴露|API Leak|API泄露|GraphQL Injection|GraphQL Introspection|Swagger|OpenAPI|Postman/ => 33API与接口安全
+
+## 34. 移动安全与逆向工程
+
+/Android|iOS|Mobile Security|移动安全|Android Security|iOS Security|APK|IPA|Android App|Mobile App|APP安全|应用安全|逆向工程|Reverse Engineering|Reverse|逆向|反编译|Decompile|反汇编|Disassembly|静态分析|动态分析|Hook|HOOK|Frida|Xposed|LSPosed|Magisk|Riru|Zygisk|Objection|Ghidra|IDA|IDA Pro|Binary Ninja|Radare2|apktool|jadx|smali|JNI|Native|SO文件|脱壳|加固|反调试|Anti Debugging|反模拟器|Anti Emulator|证书锁定|Certificate Pinning|SSL Pinning|算法分析|协议分析/ => 34移动安全与逆向工程
+
+## 35. 网络与通信安全
+
+/TCP|UDP|HTTP|HTTPS|HTTP/2|HTTP/3|QUIC|DNS|DHCP|ARP|ICMP|BGP|OSPF|NAT|VPN|IPSec|WireGuard|OpenVPN|SSH|RDP|FTP|SFTP|SMB|NFS|LDAP|Kerberos|SMTP|IMAP|POP3|SNMP|MQTT|WebSocket|TLS|SSL|PKI|Certificate|证书|中间人攻击|MITM|Man-in-the-Middle|DNS Hijacking|DNS劫持|DNS Poisoning|DNS投毒|ARP Spoofing|ARP欺骗|BGP Hijacking|BGP劫持|DDoS|DoS|拒绝服务|网络嗅探|Packet Capture|流量分析/ => 35网络与通信安全
+
+## 36. 安全运营与防御
+
+/SOC|Security Operations Center|安全运营|安全运营中心|SIEM|SOAR|EDR|XDR|NDR|MDR|IDS|IPS|WAF|防火墙|Firewall|Endpoint Security|终端安全|Threat Detection|威胁检测|Threat Hunting|威胁狩猎|Incident Response|事件响应|IR|Security Incident|安全事件|日志分析|Log Analysis|告警|Alert|安全告警|IOC|IOA|TTP|威胁情报|Threat Intelligence|检测规则|Detection Rule|Sigma|YARA|Suricata|Zeek|Wazuh|Elastic Security|Splunk|Microsoft Sentinel|Security Onion/ => 36安全运营与防御
+
+## 37. OSINT与情报工具
+
+/SearXNG|Tavily|Serper|Exa|Brave Search|Google Search|Bing Search|FreshRSS|RSS|NewsAPI|GDELT|Common Crawl|Internet Archive|Wayback Machine|Shodan|Censys|FOFA|ZoomEye|Hunter|VirusTotal|URLScan|AbuseIPDB|AlienVault|OTX|MISP|OpenCTI|Maltego|SpiderFoot|theHarvester|Recon-ng|Amass|ProjectDiscovery|IntelO|Osiris|World Monitor|TrendRadar|MediaCrawler|Agent-Reach|Hermes|OpenClaw|MCP|Obsidian|情报自动化|自动情报|Threat Intel Platform|TIP/ => 37OSINT与情报工具
+
+## 38. 新闻与全球事件监控
+
+/Breaking News|突发新闻|最新消息|实时新闻|新闻监控|新闻聚合|News Aggregator|News Monitoring|全球新闻|国际新闻|政治新闻|军事新闻|战争|冲突|武装冲突|军事冲突|地缘政治|Geopolitics|外交|制裁|Sanctions|OFAC|制裁名单|出口管制|Export Control|贸易战|关税|能源危机|石油|天然气|供应链危机|航运|Shipping|航空|Flight Tracking|卫星|Satellite|地震|火灾|洪水|气象|Space|太空|核事件|安全事件|危机监控|Crisis Monitoring/ => 38新闻与全球事件监控
+
+## 39. 加密货币与区块链安全
+
+/Bitcoin|BTC|Ethereum|ETH|Solana|SOL|BNB|USDT|USDC|Crypto|Cryptocurrency|加密货币|区块链|Blockchain|Web3|DeFi|NFT|DAO|Smart Contract|智能合约|Smart Contract Security|智能合约安全|钱包|Crypto Wallet|Wallet Address|钱包地址|私钥|Private Key|Seed Phrase|助记词|Token|代币|交易所|Exchange|Crypto Exchange|链上分析|On-Chain Analysis|区块链分析|资金追踪|Wallet Tracking|Mixer|混币|跨链桥|Bridge|Bridge Hack|闪电贷|Flash Loan|Oracle Attack|预言机攻击|Reentrancy|重入攻击|Rug Pull|跑路项目|Crypto Scam|加密货币诈骗|OFAC|制裁地址/ => 39加密货币与区块链安全
+
+## 40. 黑客工具、攻击技术与高级安全研究
+
+/Exploit Development|漏洞利用开发|Exploit Development|Shellcode|Shellcode开发|Payload Development|Payload|ROP|Return Oriented Programming|ROP Chain|Ret2Libc|Heap Exploitation|堆利用|Stack Overflow|栈溢出|Heap Overflow|堆溢出|Use After Free|UAF|Double Free|Race Condition|竞态条件|Format String|格式化字符串|Integer Overflow|整数溢出|Memory Corruption|内存破坏|Kernel Exploitation|内核利用|Kernel Exploit|内核漏洞|Driver Exploit|驱动漏洞|Windows Kernel|Linux Kernel|eBPF|Rootkit|Bootkit|Firmware|固件安全|UEFI|BIOS|Hypervisor|虚拟化安全|VM Escape|虚拟机逃逸|Sandbox Escape|沙箱逃逸|EDR Bypass|EDR绕过|AV Bypass|杀软绕过|WAF Bypass|防护绕过|Defense Evasion|Living off the Land|LOLBins|Fileless Attack|无文件攻击|Persistence|权限维持|Lateral Movement|横向移动/ => 40高级安全研究与攻击技术
+
+
+
