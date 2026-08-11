@@ -1,0 +1,6 @@
+# 爬虫与舆情 关键词库
+# 含：爬虫数据采集 / 反爬Bot防护 / 社交媒体舆情
+
+/爬虫|网络爬虫|Web Scraping|Web Crawler|Crawler|Spider|Scraper|数据采集|网页采集|信息采集|数据抓取|网页抓取|采集器|爬取|抓取|反爬|反爬虫|Anti-Bot|Bot Detection|验证码|CAPTCHA|滑块验证码|JS Challenge|JavaScript Challenge|指纹检测|浏览器指纹|Browser Fingerprint|设备指纹|Device Fingerprint|IP封禁|IP Block|IP池|IP Pool|代理池|Proxy Pool|住宅代理|Residential Proxy|动态IP|Rotating Proxy|User-Agent|Cookie|Session|Playwright|Puppeteer|Selenium|Scrapy|Requests|BeautifulSoup|Crawlee|MediaCrawler|DrissionPage|SeleniumBase|Headless Browser|无头浏览器|Browser Automation/ => 16爬虫与数据采集
+/反爬|反爬虫|Anti-Crawler|Anti-Bot|Bot Detection|Bot Protection|Bot Management|验证码|CAPTCHA|reCAPTCHA|Turnstile|Cloudflare Challenge|JS Challenge|浏览器验证|滑块|行为检测|Behavior Detection|设备指纹|浏览器指纹|Fingerprint|TLS Fingerprint|JA3|JA4|IP Reputation|IP信誉|IP封禁|IP黑名单|Rate Limit|限流|请求频率|请求签名|动态Token|动态参数|加密参数|混淆参数|接口签名|WAF|Bot Wall|Human Verification|Headless Detection|Automation Detection|反自动化|Anti Automation/ => 17反爬与Bot防护
+/社交媒体|Social Media|Social Network|微博|微信|微信公众号|抖音|快手|小红书|B站|知乎|Telegram|Discord|Reddit|X|Twitter|Facebook|Instagram|TikTok|YouTube|论坛|社区|贴吧|评论|帖子|Post|Tweet|转发|点赞|传播|扩散|病毒式传播|Trending|Trend|热搜|热点|话题|Hashtag|标签|情绪分析|Sentiment Analysis|舆情分析|舆情监测|关键词监控|实时监控|舆情预警|信息预警|传播链|Influencer|KOL|网红|账号矩阵/ => 18社交媒体与舆情
