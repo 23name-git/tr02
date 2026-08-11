@@ -235,6 +235,9 @@ def generate_html()->str:
         rising_c=sum(1 for v in trends.values() if "rising" in v)
         trend_alert=f'<div class="alert"><span>🔄</span> vs Previous Run: <strong>{new_c}</strong> new topics · <strong>{rising_c}</strong> rising · <strong>{len(prev.get("entries",[]))}→{len(entries)}</strong> articles</div>'
 
+    singles=len(entries)-sum(len(v) for v in topics.values())
+    method_alert=f'<div class="alert"><span>🧠</span> Method: sentence-transformers (all-MiniLM-L6-v2) semantic clustering · TF-IDF fallback · 🔥NEW/📈rising trend tracking · Source bias: AllSides</div>'
+
     html=f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -269,7 +272,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 .alert{{background:#dbeafe;border:1px solid #93c5fd;border-radius:8px;padding:.7rem 1rem;margin:.8rem 0;font-size:.78rem;color:#1e40af;display:flex;align-items:center;gap:.5rem}}
 /* Layout */
 .main{{display:grid;grid-template-columns:1fr 280px;gap:1rem;margin:1rem 0}}
-@media(max-width:800px){{.main{{grid-template-columns:1fr}}}}
+@media(max-width:768px){{.hd{{padding:1.5rem 0 1rem}}.hd h1{{font-size:1.15rem}}.w{{padding:0 .8rem}}.main{{grid-template-columns:1fr!important}}.sidebar .bw{{position:static!important}}.stats{{grid-template-columns:repeat(3,1fr);gap:.4rem}}.sc{{padding:.6rem .5rem}}.sc .n{{font-size:1.2rem}}.card{{padding:.8rem}}.ch h3{{font-size:.82rem}}.bb{{height:20px}}.toolbar button{{padding:.3rem .6rem;font-size:.65rem}}.rr{{grid-template-columns:20px 50px 1fr 45px;font-size:.68rem}}.sr{{font-size:.7rem}}.ar a{{font-size:.74rem}}}}
 /* Sidebar */
 .sidebar h4{{font-size:.78rem;font-weight:700;margin-bottom:.6rem;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}}
 /* Search */
@@ -334,6 +337,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 {overall_bb}
 </div>
 {trend_alert}
+{method_alert}
 
 <div class="main">
 <div class="content">
