@@ -23,8 +23,8 @@ CONFIG_DIR = Path("config/ground_news")
 
 # ===================== 向量聚类引擎 =====================
 
-def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.12) -> Dict[str, List[Dict]]:
-    """TF-IDF + cosine similarity 聚类（阈值 0.12，比 0.25 更宽松）"""
+def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.08) -> Dict[str, List[Dict]]:
+    """TF-IDF + cosine similarity 聚类（阈值 0.08，最少 3 篇成簇）"""
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
 
@@ -64,7 +64,7 @@ def cluster_articles_tfidf(entries: List[Dict], similarity_threshold: float = 0.
             if not assigned[j] and sim_matrix[i][j] >= similarity_threshold:
                 cluster.append(j)
                 assigned[j] = True
-        if len(cluster) >= 2:  # 至少要2篇才算一个簇
+        if len(cluster) >= 3:  # 至少 3 篇成簇
             clusters[len(clusters)] = cluster
 
     # 命名

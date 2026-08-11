@@ -45,66 +45,45 @@ def fetch_rss(feed_config: Dict) -> List[Dict]:
     return entries
 
 
-def ensure_agent_reach_tools():
-    """确保 agent-reach CLI 工具已安装"""
-    tools_ok = True
-    # mcporter (Exa search)
-    try:
-        subprocess.run(["mcporter", "--version"], capture_output=True, timeout=5)
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        print("  📦 Installing mcporter (Exa search)...")
-        try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "mcporter"], capture_output=True, timeout=60)
-            tools_ok = True
-        except Exception:
-            tools_ok = False
-    
-    # bili-cli (B站)
-    try:
-        subprocess.run(["bili", "--version"], capture_output=True, timeout=5)
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        print("  📦 Installing bili-cli...")
-        try:
-            subprocess.run(["npm", "install", "-g", "bili-cli"], capture_output=True, timeout=60)
-        except Exception:
-            pass  # non-critical
-
-    return tools_ok
-
-
 def fetch_agent_reach(agent_config: Dict) -> List[Dict]:
+    """agent-reach 搜索：curl + web_search 方案（无需 CLI 工具）"""
     if not agent_config.get("enabled", False):
         return []
 
-    print(f"\n🔍 agent-reach search...")
-    tools_available = ensure_agent_reach_tools()
-    if not tools_available:
-        print("  ⚠️ CLI tools unavailable, skipping agent-reach")
-        return []
-
+    print(f"\n🔍 agent-reach search (web)...")
     entries = []
+    
     for platform in agent_config.get("platforms", []):
         pname = platform["name"]
         for query in platform.get("queries", []):
             try:
                 if pname == "exa_search":
-                    result = subprocess.run(
-                        ["mcporter", "call", f'exa.web_search_exa(query: "{query}", numResults: 5)'],
-                        capture_output=True, text=True, timeout=30
-                    )
-                    if result.stdout:
-                        print(f"  ✅ exa: {query}")
+                    # 使用 curl 调 Exa API
+                    import urllib.request, urllib.parse
+                    api_key = os.getenv("EXA_API_KEY", "")
+                    if api_key:
+                        req = urllib.request.Request(
+                            "https://api.exa.ai/search",
+                            data=json.dumps({"query": query, "numResults": 5}).encode(),
+                            headers={"x-api-key": api_key, "Content-Type": "application/json"},
+                        )
+                        with urllib.request.urlopen(req, timeout=20) as resp:
+                            data = json.loads(resp.read())
+                            for r in data.get("results", []):
+                                entries.append({
+                                    "title": r.get("title", ""),
+                                    "link": r.get("url", ""),
+                                    "source_name": "Exa Search",
+                                    "source_id": "exa",
+                                })
+                        print(f"  ✅ Exa: {query} ({len(entries)} results)")
+                    else:
+                        print(f"  ℹ️ Exa API key not set (EXA_API_KEY), skipping")
                 elif pname == "bilibili":
-                    cmd = platform["command"].replace("{query}", query).split()
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-                    if result.stdout:
-                        print(f"  ✅ bili: {query}")
-            except subprocess.TimeoutExpired:
-                print(f"  ⏱️ timeout: {pname}")
-            except FileNotFoundError:
-                print(f"  ⚠️ not found: {pname}")
+                    # B站搜索用 web_search
+                    print(f"  ℹ️ B站: CLI 不可用，跳过（需在 runner 预装 bili-cli）")
             except Exception as e:
-                print(f"  ❌ {pname}: {e}")
+                print(f"  ⚠️ {pname}: {e}")
     return entries
 
 

@@ -66,14 +66,6 @@ rss_feeds:
     bias_reference: ithome.com
     language: zh
 
-  # 36氪 - 替换为可用 feed
-  - id: 36kr_alt
-    name: 36氪
-    url: https://rsshub.app/36kr/motif/221982
-    category: tech
-    bias_reference: 36kr.com
-    language: zh
-
   # ===== 科技源 =====
   - id: techcrunch
     name: TechCrunch
@@ -132,12 +124,26 @@ rss_feeds:
     bias_reference: aljazeera.com
     language: en
 
-  # ===== 修复死源 =====
-  - id: 36kr_alt
-    name: 36氪
-    url: https://rsshub.app/36kr/motif/221982
-    category: tech
-    bias_reference: 36kr.com
+  # ===== 修复死源：3 个中文可用源代替 36kr =====
+  - id: chinanews
+    name: 中国新闻网
+    url: https://www.chinanews.com.cn/rss/rss_2.html
+    category: china
+    bias_reference: chinanews.com
+    language: zh
+
+  - id: zaobao
+    name: 联合早报
+    url: https://www.zaobao.com/news/china/story2
+    category: asia
+    bias_reference: zaobao.com
+    language: zh
+
+  - id: huanqiu
+    name: 环球网
+    url: https://www.huanqiu.com/rss/latest.xml
+    category: china
+    bias_reference: huanqiu.com
     language: zh
 
 # agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
