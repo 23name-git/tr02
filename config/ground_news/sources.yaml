@@ -174,11 +174,75 @@ rss_feeds:
     bias_reference: reuters.com
     language: en
 
-  - id: ap_news
-    name: Associated Press
-    url: https://rsshub.app/apnews/topics/apf-topnews
+  # ===== RSSHub 第二波（经济/科技/深度）=====
+  - id: wallstreetcn
+    name: 华尔街见闻
+    url: https://rsshub.app/wallstreetcn/hot/1
+    category: finance
+    bias_reference: wallstreetcn.com
+    language: zh
+
+  - id: cls
+    name: 财联社
+    url: https://rsshub.app/cls/telegraph
+    category: finance
+    bias_reference: cls.cn
+    language: zh
+
+  - id: huxiu
+    name: 虎嗅网
+    url: https://rsshub.app/huxiu/article
+    category: tech
+    bias_reference: huxiu.com
+    language: zh
+
+  - id: ifeng_news
+    name: 凤凰网
+    url: https://rsshub.app/ifeng/news
+    category: china
+    bias_reference: ifeng.com
+    language: zh
+
+  - id: xueqiu_hot
+    name: 雪球热帖
+    url: https://rsshub.app/xueqiu/hots
+    category: finance
+    bias_reference: xueqiu.com
+    language: zh
+
+  - id: bbc_chinese
+    name: BBC中文
+    url: https://rsshub.app/bbc/chinese
     category: world
-    bias_reference: apnews.com
+    bias_reference: bbc.com
+    language: zh
+
+  - id: voa_chinese
+    name: VOA中文
+    url: https://rsshub.app/voa/chinese/1
+    category: world
+    bias_reference: voanews.com
+    language: zh
+
+  - id: nature
+    name: Nature
+    url: https://rsshub.app/nature/research
+    category: science
+    bias_reference: nature.com
+    language: en
+
+  - id: github_trending
+    name: GitHub Trending
+    url: https://rsshub.app/github/trending/daily
+    category: tech
+    bias_reference: github.com
+    language: en
+
+  - id: producthunt
+    name: Product Hunt
+    url: https://rsshub.app/producthunt/today
+    category: tech
+    bias_reference: producthunt.com
     language: en
 
 # agent-reach 搜索配置（中文社交媒体 + 搜索引擎）
