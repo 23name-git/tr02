@@ -50,14 +50,6 @@ jobs:
           uv run python -m spacy download zh_core_web_sm
           uv run python -m spacy download en_core_web_sm
 
-      - name: Install agent-reach CLI tools
-        continue-on-error: true
-        run: |
-          # bili-cli（B站搜索，Node.js 全局安装）
-          npm install -g bili-cli 2>/dev/null || echo "⚠️ bili-cli unavailable (non-critical)"
-          # mcporter（Exa 搜索，pip 安装）
-          pip install mcporter 2>/dev/null || echo "⚠️ mcporter unavailable (non-critical)"
-
       - name: Verify config
         run: |
           if [ ! -f config/ground_news/sources.yaml ]; then

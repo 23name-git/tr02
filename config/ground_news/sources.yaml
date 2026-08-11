@@ -20,11 +20,11 @@ rss_feeds:
   # ===== 中文源（3 个已验证 + 5 个 RSSHub）=====
   - {id: people_cn, name: 人民网, url: "http://www.people.com.cn/rss/politics.xml", category: china, bias: lean-left, language: zh}
   - {id: ithome, name: IT之家, url: "https://www.ithome.com/rss/", category: tech, bias: center, language: zh}
-  - {id: xinhua, name: 新华社, url: "https://rsshub.app/xinhua/news", category: china, bias: lean-left, language: zh}
-  - {id: caixin, name: 财新网, url: "https://rsshub.app/caixin/latest", category: china, bias: center, language: zh}
-  - {id: thepaper, name: 澎湃新闻, url: "https://rsshub.app/thepaper/featured", category: china, bias: lean-left, language: zh}
-  - {id: jiemian, name: 界面新闻, url: "https://rsshub.app/jiemian/latest", category: finance, bias: center, language: zh}
-  - {id: cls, name: 财联社, url: "https://rsshub.app/cls/telegraph", category: finance, bias: center, language: zh}
+  - {id: xinhua, name: 新华社, url: "https://rsshub.pseudoyu.com/xinhua/news", category: china, bias: lean-left, language: zh}
+  - {id: caixin, name: 财新网, url: "https://rsshub.pseudoyu.com/caixin/latest", category: china, bias: center, language: zh}
+  - {id: thepaper, name: 澎湃新闻, url: "https://rsshub.pseudoyu.com/thepaper/featured", category: china, bias: lean-left, language: zh}
+  - {id: jiemian, name: 界面新闻, url: "https://rsshub.pseudoyu.com/jiemian/latest", category: finance, bias: center, language: zh}
+  - {id: cls, name: 财联社, url: "https://rsshub.pseudoyu.com/cls/telegraph", category: finance, bias: center, language: zh}
 
   # ===== 科技源（10 个）=====
   - {id: techcrunch, name: TechCrunch, url: "https://techcrunch.com/feed/", category: tech, bias: center, language: en}

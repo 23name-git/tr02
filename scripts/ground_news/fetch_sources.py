@@ -46,7 +46,7 @@ def fetch_rss(feed_config: Dict) -> List[Dict]:
 
 
 def fetch_agent_reach(agent_config: Dict) -> List[Dict]:
-    """agent-reach 搜索：Exa API（curl）+ B站（CLI）+ 优雅降级"""
+    """agent-reach 搜索：Exa API + B站直连 API + RSSHub 备用实例"""
     if not agent_config.get("enabled", False):
         return []
 
@@ -58,7 +58,6 @@ def fetch_agent_reach(agent_config: Dict) -> List[Dict]:
         for query in platform.get("queries", []):
             try:
                 if pname == "exa_search":
-                    # 方案 A：Exa API key（GitHub Secrets）
                     api_key = os.getenv("EXA_API_KEY", "")
                     if api_key:
                         import urllib.request
@@ -71,33 +70,33 @@ def fetch_agent_reach(agent_config: Dict) -> List[Dict]:
                             data = json.loads(resp.read())
                             for r in data.get("results", []):
                                 entries.append({
-                                    "title": r.get("title", ""),
-                                    "link": r.get("url", ""),
-                                    "source_name": "Exa",
-                                    "source_id": "exa",
+                                    "title": r.get("title",""), "link": r.get("url",""),
+                                    "source_name": "Exa", "source_id": "exa",
                                 })
                         print(f"  ✅ Exa: {query}")
                     else:
-                        # 方案 B：mcporter CLI
-                        try:
-                            result = subprocess.run(
-                                ["mcporter", "call", f'exa.web_search_exa(query: "{query}", numResults: 5)'],
-                                capture_output=True, text=True, timeout=30
-                            )
-                            if result.stdout:
-                                print(f"  ✅ mcporter: {query}")
-                        except (FileNotFoundError, subprocess.TimeoutExpired):
-                            print(f"  ℹ️ Exa unavailable (set EXA_API_KEY secret)")
+                        print(f"  ℹ️ Exa: no API key")
                 elif pname == "bilibili":
+                    # B站搜索 API 直连（无需 CLI）
+                    import urllib.request, urllib.parse
                     try:
-                        result = subprocess.run(
-                            ["bili", "search", query, "--type", "video", "-n", "5"],
-                            capture_output=True, text=True, timeout=30
+                        q = urllib.parse.quote(query)
+                        req = urllib.request.Request(
+                            f"https://api.bilibili.com/x/web-interface/search/all/v2?keyword={q}&page=1",
+                            headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.bilibili.com"},
                         )
-                        if result.stdout:
-                            print(f"  ✅ B站: {query}")
-                    except (FileNotFoundError, subprocess.TimeoutExpired):
-                        print(f"  ℹ️ bili-cli not found (run: npm install -g bili-cli)")
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            data = json.loads(resp.read())
+                            videos = data.get("data",{}).get("result",[])
+                            for v in videos[:5]:
+                                if isinstance(v, dict) and v.get("arcurl"):
+                                    entries.append({
+                                        "title": v.get("title",""), "link": v.get("arcurl",""),
+                                        "source_name": "B站", "source_id": "bilibili",
+                                    })
+                        print(f"  ✅ B站: {query}")
+                    except Exception as e:
+                        print(f"  ℹ️ B站 API: {e}")
             except Exception as e:
                 print(f"  ⚠️ {pname}: {e}")
     return entries
