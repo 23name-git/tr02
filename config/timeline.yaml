@@ -256,8 +256,12 @@ presets:
 
       noon_update:
         name: "午间热点"
-        start: "13:00"
-        end: "15:00"
+        # start: "13:00"
+        # end: "15:00"
+
+        start: "15:00"    # 北京时间次日 00:30
+        end: "19:00"      # 窗口 30 分钟够跑完
+        
         push: true                 # 午间推送当前在榜热点
         report_mode: "current"     # 当前在榜的新闻
         # analyze 继承 default: false → 午间不做 AI 分析，节省 API
@@ -265,8 +269,12 @@ presets:
 
       closing_summary:
         name: "收工汇总"
-        start: "17:00"
-        end: "19:00"
+        # start: "17:00"
+        # end: "19:00"
+        
+        start: "23:30"    # 北京时间次日 00:30
+        end: "00:50"      # 窗口 30 分钟够跑完
+        
         analyze: true              # AI 做全天汇总分析
         ai_mode: "daily"           # AI 也分析全天内容
         push: true                 # 下班前推送当日完整汇总
