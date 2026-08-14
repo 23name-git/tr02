@@ -237,11 +237,16 @@ presets:
       collect: true
       analyze: false
       ai_mode: "current"
-      push: false                  # 默认不推送
+      #push: false                  # 默认不推送
+
+      push: true                   # 每次推送当前在榜热点
+      
       report_mode: "current"
       once:
+        #analyze: true              # 每个时段只分析一次
         analyze: true              # 每个时段只分析一次
-        push: true                 # 每个时段只推送一次
+        #push: true                 # 每个时段只推送一次
+        push: false                 # 每个时段只推送一次
 
     periods:
       morning_briefing:
